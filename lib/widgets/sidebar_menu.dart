@@ -132,7 +132,9 @@ class _SidebarMenuState extends State<SidebarMenu> {
       children: [
         _buildPinBar(context),
         if (!_rail)
-          _auth.isLoggedIn ? _buildProfile(context) : _buildLoginPrompt(context),
+          _auth.isLoggedIn
+              ? _buildProfile(context)
+              : _buildLoginPrompt(context),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -421,7 +423,9 @@ class _SidebarMenuState extends State<SidebarMenu> {
     required String title,
     required VoidCallback onTap,
   }) {
-    if (_rail) return _railIcon(key: key, icon: icon, title: title, onTap: onTap);
+    if (_rail) {
+      return _railIcon(key: key, icon: icon, title: title, onTap: onTap);
+    }
     return Material(
       color: Colors.transparent,
       child: InkWell(

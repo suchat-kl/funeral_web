@@ -48,14 +48,17 @@ void main() {
       expect(x.admin, isFalse);
     });
 
-    test('ผู้นำไฟล์เข้าที่ไม่ใช่สมาชิก: ซ่อนใบเสร็จรายงวด แต่ออกใบเสร็จเงินสดได้', () {
-      final x = a(const [Roles.nonMember, Roles.uploader]);
-      expect(x.periodReceipts, isFalse);
-      expect(x.cashReceipts, isTrue);
-      expect(x.upload, isTrue);
-      expect(x.reports, isTrue);
-      expect(x.admin, isFalse);
-    });
+    test(
+      'ผู้นำไฟล์เข้าที่ไม่ใช่สมาชิก: ซ่อนใบเสร็จรายงวด แต่ออกใบเสร็จเงินสดได้',
+      () {
+        final x = a(const [Roles.nonMember, Roles.uploader]);
+        expect(x.periodReceipts, isFalse);
+        expect(x.cashReceipts, isTrue);
+        expect(x.upload, isTrue);
+        expect(x.reports, isTrue);
+        expect(x.admin, isFalse);
+      },
+    );
 
     test('ผู้ดูแล: ทุกเมนูยกเว้นใบเสร็จรายงวด (ไม่ใช่สมาชิก)', () {
       final x = a(const [Roles.nonMember, Roles.uploader, Roles.admin]);
@@ -66,18 +69,20 @@ void main() {
       expect(x.admin, isTrue);
     });
 
-    test('ผู้ดูแลที่ backend ไม่ส่ง UPLOADER มาด้วย ยังได้เมนูนำไฟล์เข้า/รายงาน', () {
-      final x = a(const [Roles.admin]);
-      expect(x.upload, isTrue);
-      expect(x.reports, isTrue);
-    });
+    test(
+      'ผู้ดูแลที่ backend ไม่ส่ง UPLOADER มาด้วย ยังได้เมนูนำไฟล์เข้า/รายงาน',
+      () {
+        final x = a(const [Roles.admin]);
+        expect(x.upload, isTrue);
+        expect(x.reports, isTrue);
+      },
+    );
 
     test('บทบาทใหม่ที่ไม่รู้จักถูกเก็บไว้ ไม่ทำให้พัง (รายการเปิด)', () {
-      expect(Roles.listFrom(['ROLE_ADMIN', 'DEPOSIT_STAFF', 'MEMBER', 'MEMBER']), [
-        'ADMIN',
-        'DEPOSIT_STAFF',
-        'MEMBER',
-      ]);
+      expect(
+        Roles.listFrom(['ROLE_ADMIN', 'DEPOSIT_STAFF', 'MEMBER', 'MEMBER']),
+        ['ADMIN', 'DEPOSIT_STAFF', 'MEMBER'],
+      );
       expect(Roles.nameOf('DEPOSIT_STAFF'), 'DEPOSIT_STAFF');
       expect(Roles.nameOf('ROLE_UPLOADER'), 'ผู้นำไฟล์เข้า');
     });
@@ -145,7 +150,12 @@ void main() {
 
     testWidgets('ไม่ใช่สมาชิก', (tester) async {
       await openMenu(tester, 'nonmember1', 'NonMember@2569x');
-      expectItems({'general-files', 'monthyear-files', 'change-password', 'two-factor'});
+      expectItems({
+        'general-files',
+        'monthyear-files',
+        'change-password',
+        'two-factor',
+      });
     });
 
     testWidgets('สมาชิก', (tester) async {
@@ -199,7 +209,12 @@ void main() {
       await openMenu(tester, 'member1', 'Member@2569x');
       await tester.tap(find.byKey(AppMenuItem.keyOf('monthyear-files')));
       await tester.pumpAndSettle();
-      expect(find.text('ทะเบียนคุมรายชื่อสมาชิกฌาปนกิจรายเดือน เลือกปีและเดือนแล้วดาวน์โหลด'), findsOneWidget);
+      expect(
+        find.text(
+          'ทะเบียนคุมรายชื่อสมาชิกฌาปนกิจรายเดือน เลือกปีและเดือนแล้วดาวน์โหลด',
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

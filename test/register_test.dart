@@ -54,8 +54,10 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Finder field(Key key) =>
-      find.descendant(of: find.byKey(key), matching: find.byType(TextFormField));
+  Finder field(Key key) => find.descendant(
+    of: find.byKey(key),
+    matching: find.byType(TextFormField),
+  );
 
   Future<void> tapText(WidgetTester tester, String text) async {
     await tester.ensureVisible(find.text(text).last);
@@ -111,7 +113,10 @@ void main() {
     await open(tester);
     expect(find.byKey(RegisterDialog.memberKey), findsOneWidget);
     expect(find.byKey(RegisterDialog.nonMemberKey), findsOneWidget);
-    expect(find.text('ขั้นที่ 1 จาก 3: ท่านเป็นสมาชิกฌาปนกิจหรือไม่'), findsOneWidget);
+    expect(
+      find.text('ขั้นที่ 1 จาก 3: ท่านเป็นสมาชิกฌาปนกิจหรือไม่'),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -137,102 +142,111 @@ void main() {
     },
   );
 
-  testWidgets('สมาชิกแบบเดิม: เลขบัตรผิดหลักตรวจสอบ = เตือนในช่อง ไม่เรียก backend', (
-    tester,
-  ) async {
-    await open(tester);
-    await tester.tap(find.byKey(RegisterDialog.memberKey));
-    await tester.pumpAndSettle();
-    await tester.enterText(field(RegisterDialog.idcardKey), '1234567890123');
-    await tester.enterText(field(RegisterDialog.memberNoKey), '70001');
-    await tapText(tester, 'ตรวจสอบ');
-    expect(find.text('เลขบัตรประชาชนไม่ถูกต้อง'), findsOneWidget);
-    expect(find.text('กรุณาเลือกวันเกิด'), findsOneWidget);
-    expect(backend.calls, isEmpty);
-  });
+  testWidgets(
+    'สมาชิกแบบเดิม: เลขบัตรผิดหลักตรวจสอบ = เตือนในช่อง ไม่เรียก backend',
+    (tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(RegisterDialog.memberKey));
+      await tester.pumpAndSettle();
+      await tester.enterText(field(RegisterDialog.idcardKey), '1234567890123');
+      await tester.enterText(field(RegisterDialog.memberNoKey), '70001');
+      await tapText(tester, 'ตรวจสอบ');
+      expect(find.text('เลขบัตรประชาชนไม่ถูกต้อง'), findsOneWidget);
+      expect(find.text('กรุณาเลือกวันเกิด'), findsOneWidget);
+      expect(backend.calls, isEmpty);
+    },
+  );
 
-  testWidgets('สมาชิกแบบเดิม: ข้อมูลไม่ตรง (REGISTER_NOT_MATCH) แสดงข้อความ อยู่ขั้นเดิม', (
-    tester,
-  ) async {
-    await open(tester);
-    await fillLegacy(tester, idcard: memberId, memberNo: '79999');
-    expect(find.text('ข้อมูลไม่ตรงกับทะเบียนสมาชิก'), findsOneWidget);
-    expect(find.byKey(RegisterDialog.verifiedKey), findsNothing);
-    expect(find.byKey(RegisterDialog.idcardKey), findsOneWidget);
-  });
+  testWidgets(
+    'สมาชิกแบบเดิม: ข้อมูลไม่ตรง (REGISTER_NOT_MATCH) แสดงข้อความ อยู่ขั้นเดิม',
+    (tester) async {
+      await open(tester);
+      await fillLegacy(tester, idcard: memberId, memberNo: '79999');
+      expect(find.text('ข้อมูลไม่ตรงกับทะเบียนสมาชิก'), findsOneWidget);
+      expect(find.byKey(RegisterDialog.verifiedKey), findsNothing);
+      expect(find.byKey(RegisterDialog.idcardKey), findsOneWidget);
+    },
+  );
 
-  testWidgets('เลขบัตรมีบัญชีแล้ว (ALREADY_REGISTERED): ปุ่มไปลืมรหัสผ่านผ่าน ThaID', (
-    tester,
-  ) async {
-    await open(tester);
-    final existing = backend.users['member1']!.idcard;
-    await fillLegacy(tester, idcard: existing);
-    expect(find.byKey(RegisterDialog.alreadyKey), findsOneWidget);
-    await tester.tap(find.byKey(RegisterDialog.goForgotKey));
-    await tester.pumpAndSettle();
-    expect(closed, isTrue);
-    expect(result?.goForgotPassword, isTrue);
-  });
+  testWidgets(
+    'เลขบัตรมีบัญชีแล้ว (ALREADY_REGISTERED): ปุ่มไปลืมรหัสผ่านผ่าน ThaID',
+    (tester) async {
+      await open(tester);
+      final existing = backend.users['member1']!.idcard;
+      await fillLegacy(tester, idcard: existing);
+      expect(find.byKey(RegisterDialog.alreadyKey), findsOneWidget);
+      await tester.tap(find.byKey(RegisterDialog.goForgotKey));
+      await tester.pumpAndSettle();
+      expect(closed, isTrue);
+      expect(result?.goForgotPassword, isTrue);
+    },
+  );
 
-  testWidgets('สมาชิก ThaID: purpose=register, mode=MEMBER แล้วลงทะเบียนสำเร็จ', (
-    tester,
-  ) async {
-    await open(tester);
-    thaid.state = 'st-reg';
-    backend.thaid['st-reg'] = FakeThaid('register', memberId);
-    await tester.tap(find.byKey(RegisterDialog.memberKey));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(RegisterDialog.thaidWayKey));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
-    await tester.pumpAndSettle();
-    expect(thaid.purposes, ['register']);
-    expect(backend.bodyOf('POST /api/auth/public-thaid/register'), {
-      'state': 'st-reg',
-      'mode': 'MEMBER',
-    });
-    await fillAccount(tester, username: 'tester.two');
-    expect(result?.username, 'tester.two');
-  });
+  testWidgets(
+    'สมาชิก ThaID: purpose=register, mode=MEMBER แล้วลงทะเบียนสำเร็จ',
+    (tester) async {
+      await open(tester);
+      thaid.state = 'st-reg';
+      backend.thaid['st-reg'] = FakeThaid('register', memberId);
+      await tester.tap(find.byKey(RegisterDialog.memberKey));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(RegisterDialog.thaidWayKey));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
+      await tester.pumpAndSettle();
+      expect(thaid.purposes, ['register']);
+      expect(backend.bodyOf('POST /api/auth/public-thaid/register'), {
+        'state': 'st-reg',
+        'mode': 'MEMBER',
+      });
+      await fillAccount(tester, username: 'tester.two');
+      expect(result?.username, 'tester.two');
+    },
+  );
 
-  testWidgets('สมาชิก ThaID ไม่พบในทะเบียน (NOT_MEMBER): ปุ่มลงทะเบียนแบบไม่เป็นสมาชิก', (
-    tester,
-  ) async {
-    await open(tester);
-    thaid.state = 'st-nm';
-    backend.thaid['st-nm'] = FakeThaid('register', dpisOnlyId);
-    await tester.tap(find.byKey(RegisterDialog.memberKey));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(RegisterDialog.thaidWayKey));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
-    await tester.pumpAndSettle();
-    expect(find.text('ไม่พบเลขบัตรในทะเบียนสมาชิกฌาปนกิจ'), findsOneWidget);
-    await tester.tap(find.byKey(RegisterDialog.goNonMemberKey));
-    await tester.pumpAndSettle();
-    // ไม่เป็นสมาชิก: ไม่มีตัวเลือกแบบเดิม มีแต่ ThaID
-    expect(find.byKey(RegisterDialog.legacyWayKey), findsNothing);
-    thaid.state = 'st-nm2';
-    backend.thaid['st-nm2'] = FakeThaid('register', dpisOnlyId);
-    await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
-    await tester.pumpAndSettle();
-    expect(backend.bodyOf('POST /api/auth/public-thaid/register')!['mode'], 'NON_MEMBER');
-    expect(textContaining('ไม่ใช่สมาชิกฌาปนกิจ'), findsOneWidget);
-  });
+  testWidgets(
+    'สมาชิก ThaID ไม่พบในทะเบียน (NOT_MEMBER): ปุ่มลงทะเบียนแบบไม่เป็นสมาชิก',
+    (tester) async {
+      await open(tester);
+      thaid.state = 'st-nm';
+      backend.thaid['st-nm'] = FakeThaid('register', dpisOnlyId);
+      await tester.tap(find.byKey(RegisterDialog.memberKey));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(RegisterDialog.thaidWayKey));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
+      await tester.pumpAndSettle();
+      expect(find.text('ไม่พบเลขบัตรในทะเบียนสมาชิกฌาปนกิจ'), findsOneWidget);
+      await tester.tap(find.byKey(RegisterDialog.goNonMemberKey));
+      await tester.pumpAndSettle();
+      // ไม่เป็นสมาชิก: ไม่มีตัวเลือกแบบเดิม มีแต่ ThaID
+      expect(find.byKey(RegisterDialog.legacyWayKey), findsNothing);
+      thaid.state = 'st-nm2';
+      backend.thaid['st-nm2'] = FakeThaid('register', dpisOnlyId);
+      await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
+      await tester.pumpAndSettle();
+      expect(
+        backend.bodyOf('POST /api/auth/public-thaid/register')!['mode'],
+        'NON_MEMBER',
+      );
+      expect(textContaining('ไม่ใช่สมาชิกฌาปนกิจ'), findsOneWidget);
+    },
+  );
 
-  testWidgets('ไม่เป็นสมาชิก: ThaID เท่านั้น ไม่พบใน DPIS (NOT_IN_DPIS) แสดงข้อความ', (
-    tester,
-  ) async {
-    await open(tester);
-    thaid.state = 'st-x';
-    backend.thaid['st-x'] = FakeThaid('register', fakeIdcard('399999999999'));
-    await tester.tap(find.byKey(RegisterDialog.nonMemberKey));
-    await tester.pumpAndSettle();
-    expect(find.byKey(RegisterDialog.legacyWayKey), findsNothing);
-    await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
-    await tester.pumpAndSettle();
-    expect(find.text('ไม่พบข้อมูลบุคลากรของเลขบัตรนี้'), findsOneWidget);
-  });
+  testWidgets(
+    'ไม่เป็นสมาชิก: ThaID เท่านั้น ไม่พบใน DPIS (NOT_IN_DPIS) แสดงข้อความ',
+    (tester) async {
+      await open(tester);
+      thaid.state = 'st-x';
+      backend.thaid['st-x'] = FakeThaid('register', fakeIdcard('399999999999'));
+      await tester.tap(find.byKey(RegisterDialog.nonMemberKey));
+      await tester.pumpAndSettle();
+      expect(find.byKey(RegisterDialog.legacyWayKey), findsNothing);
+      await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
+      await tester.pumpAndSettle();
+      expect(find.text('ไม่พบข้อมูลบุคลากรของเลขบัตรนี้'), findsOneWidget);
+    },
+  );
 
   testWidgets('ThaID ยกเลิก: แจ้งยกเลิก ไม่เรียกเส้นลงทะเบียน', (tester) async {
     await open(tester);
@@ -242,22 +256,31 @@ void main() {
     await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
     await tester.pumpAndSettle();
     expect(find.text('ผู้ใช้งานยกเลิกการใช้ ThaID'), findsOneWidget);
-    expect(backend.calls, isNot(contains('POST /api/auth/public-thaid/register')));
+    expect(
+      backend.calls,
+      isNot(contains('POST /api/auth/public-thaid/register')),
+    );
   });
 
-  testWidgets('ชื่อซ้ำ (409 DUPLICATE): เตือนที่ช่องชื่อผู้ใช้ ใบผ่านเดิมใช้ต่อได้', (
-    tester,
-  ) async {
-    await open(tester);
-    await fillLegacy(tester, idcard: memberId);
-    await fillAccount(tester, username: 'member1'); // มีอยู่แล้ว
-    expect(find.text('ชื่อผู้ใช้นี้มีผู้ใช้แล้ว'), findsOneWidget);
-    expect(closed, isFalse);
-    final ticket = backend.bodyOf('POST /api/public/register/complete')!['ticket'];
-    await fillAccount(tester, username: 'tester.three');
-    expect(backend.bodyOf('POST /api/public/register/complete')!['ticket'], ticket);
-    expect(result?.username, 'tester.three');
-  });
+  testWidgets(
+    'ชื่อซ้ำ (409 DUPLICATE): เตือนที่ช่องชื่อผู้ใช้ ใบผ่านเดิมใช้ต่อได้',
+    (tester) async {
+      await open(tester);
+      await fillLegacy(tester, idcard: memberId);
+      await fillAccount(tester, username: 'member1'); // มีอยู่แล้ว
+      expect(find.text('ชื่อผู้ใช้นี้มีผู้ใช้แล้ว'), findsOneWidget);
+      expect(closed, isFalse);
+      final ticket = backend.bodyOf(
+        'POST /api/public/register/complete',
+      )!['ticket'];
+      await fillAccount(tester, username: 'tester.three');
+      expect(
+        backend.bodyOf('POST /api/public/register/complete')!['ticket'],
+        ticket,
+      );
+      expect(result?.username, 'tester.three');
+    },
+  );
 
   testWidgets('ใบผ่านหมดอายุ (REGISTER_TICKET_INVALID): กลับไปเริ่มขั้นที่ 1', (
     tester,
@@ -281,7 +304,10 @@ void main() {
       'ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่',
     );
     await fillLegacy(tester, idcard: memberId);
-    expect(find.text('ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่'), findsOneWidget);
+    expect(
+      find.text('ลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่'),
+      findsOneWidget,
+    );
   });
 
   test('กติกาชื่อผู้ใช้ตรงกับ backend', () {

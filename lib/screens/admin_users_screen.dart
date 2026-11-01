@@ -113,7 +113,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       ),
     );
     if (saved == null || !mounted) return;
-    context.showSuccessSnackBar('บันทึกข้อมูลผู้ใช้ ${saved.username} เรียบร้อย');
+    context.showSuccessSnackBar(
+      'บันทึกข้อมูลผู้ใช้ ${saved.username} เรียบร้อย',
+    );
     await _load();
   }
 
@@ -126,7 +128,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       if (u.twoFactorEnabled) const StatusChip('2FA', AppTheme.infoColor),
       if (u.mustChangePassword)
         const StatusChip('ต้องเปลี่ยนรหัส', AppTheme.warningColor),
-      if (u.active && !u.locked) const StatusChip('ใช้งาน', AppTheme.successColor),
+      if (u.active && !u.locked)
+        const StatusChip('ใช้งาน', AppTheme.successColor),
     ],
   );
 
@@ -146,7 +149,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(u.username, style: screenText(size: 14.5, weight: FontWeight.w600)),
+              Text(
+                u.username,
+                style: screenText(size: 14.5, weight: FontWeight.w600),
+              ),
               Text(
                 u.fullName.isEmpty ? '-' : u.fullName,
                 style: screenText(size: 13, color: AppTheme.textSecondary),
@@ -197,7 +203,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   Widget build(BuildContext context) {
     final data = _data;
     final users = data?.users ?? const <UserAdmin>[];
-    final totalPages = data == null || data.totalPages < 1 ? 1 : data.totalPages;
+    final totalPages = data == null || data.totalPages < 1
+        ? 1
+        : data.totalPages;
     return WorkPage(
       group: AdminUsersScreen.groupTitle,
       maxWidth: 1240,
@@ -244,7 +252,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 emptyText: _loading ? 'กำลังโหลด...' : 'ไม่พบผู้ใช้',
                 header: const Row(
                   children: [
-                    Expanded(flex: 5, child: SheetHead('ชื่อผู้ใช้ / ชื่อ-สกุล')),
+                    Expanded(
+                      flex: 5,
+                      child: SheetHead('ชื่อผู้ใช้ / ชื่อ-สกุล'),
+                    ),
                     Expanded(flex: 3, child: SheetHead('สมาชิก / ประเภท')),
                     Expanded(flex: 4, child: SheetHead('บทบาท')),
                     Expanded(flex: 4, child: SheetHead('สถานะ')),

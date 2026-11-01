@@ -547,8 +547,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(10),
       ],
-      validator: (v) =>
-          (v ?? '').trim().isEmpty ? 'กรุณากรอกเลขสมาชิก' : null,
+      validator: (v) => (v ?? '').trim().isEmpty ? 'กรุณากรอกเลขสมาชิก' : null,
     ),
     const SizedBox(height: 12),
     AccountField(

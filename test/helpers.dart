@@ -133,7 +133,8 @@ void logoutAfter() {
 
 /// ข้อความที่มี [part] อยู่ (ใช้หาข้อความยาวที่มีค่าตัวแปรปน)
 Finder textContaining(String part) => find.byWidgetPredicate(
-  (w) => w is Text && (w.data ?? w.textSpan?.toPlainText() ?? '').contains(part),
+  (w) =>
+      w is Text && (w.data ?? w.textSpan?.toPlainText() ?? '').contains(part),
 );
 
 /// โหลดฟอนต์จริงของแอป (ฟอนต์ตั้งต้นของเทสต์กว้างกว่ามาก ปุ่ม/แถวจะล้นผิดจากของจริง)

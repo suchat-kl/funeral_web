@@ -67,21 +67,25 @@ class _FileTableState extends State<FileTable> {
     ];
   }
 
-  Widget _cell(String text, int flex, {TextAlign align = TextAlign.left, bool bold = false}) =>
-      Expanded(
-        flex: flex,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-          child: Text(
-            text,
-            textAlign: align,
-            style: screenText(
-              size: 14,
-              weight: bold ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
+  Widget _cell(
+    String text,
+    int flex, {
+    TextAlign align = TextAlign.left,
+    bool bold = false,
+  }) => Expanded(
+    flex: flex,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      child: Text(
+        text,
+        textAlign: align,
+        style: screenText(
+          size: 14,
+          weight: bold ? FontWeight.w600 : FontWeight.w400,
         ),
-      );
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -157,10 +161,8 @@ class _FileTableState extends State<FileTable> {
                     _cell(f.num > 0 ? '${f.num}' : '-', 1),
                     _cell(f.typeFile.isEmpty ? '-' : f.typeFile, 2),
                     _cell(f.title, 6, bold: true),
-                    if (widget.showYearMonth)
-                      _cell(f.yearMonth ?? '-', 2),
-                    if (widget.showFileFor)
-                      _cell(FileFor.nameOf(f.fileFor), 2),
+                    if (widget.showYearMonth) _cell(f.yearMonth ?? '-', 2),
+                    if (widget.showFileFor) _cell(FileFor.nameOf(f.fileFor), 2),
                     _cell(f.uploadedText, 2),
                     Expanded(
                       flex: 3,
@@ -174,8 +176,7 @@ class _FileTableState extends State<FileTable> {
                 ),
             ],
           ),
-        if (list.length > AppPagination.pageSizeOptions.first ||
-            pages > 1) ...[
+        if (list.length > AppPagination.pageSizeOptions.first || pages > 1) ...[
           const SizedBox(height: 10),
           AppPagination(
             currentPage: page,

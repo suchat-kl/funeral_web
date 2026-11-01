@@ -29,10 +29,8 @@ Future<PickedFile?> pickImageFile() => pickFile(accept: 'image/png,image/jpeg');
 
 /// เปิดหน้าต่างเลือกเอกสารที่นำเข้าระบบได้ (pdf doc docx xls xlsx zip)
 /// ไฟล์ที่ใหญ่เกิน [maxBytes] ไม่ถูกอ่านเข้าหน่วยความจำ (หน้าจอแจ้งว่าใหญ่เกินจาก `size`)
-Future<PickedFile?> pickDocumentFile({int? maxBytes}) => pickFile(
-  accept: '.pdf,.doc,.docx,.xls,.xlsx,.zip',
-  maxBytes: maxBytes,
-);
+Future<PickedFile?> pickDocumentFile({int? maxBytes}) =>
+    pickFile(accept: '.pdf,.doc,.docx,.xls,.xlsx,.zip', maxBytes: maxBytes);
 
 /// เปิดหน้าต่างเลือกไฟล์ CSV (นำเข้าข้อมูลเดิม)
 Future<PickedFile?> pickCsvFile() => pickFile(accept: '.csv,text/csv');

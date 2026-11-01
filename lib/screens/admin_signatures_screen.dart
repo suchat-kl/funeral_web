@@ -191,7 +191,10 @@ class _AdminSignaturesScreenState extends State<AdminSignaturesScreen> {
 
   Widget _preview(SignatureItem s) {
     if (!s.hasImage) {
-      return Text('ไม่มีรูป', style: screenText(size: 13, color: AppTheme.textSecondary));
+      return Text(
+        'ไม่มีรูป',
+        style: screenText(size: 13, color: AppTheme.textSecondary),
+      );
     }
     final future = _images.putIfAbsent(
       s.id,
@@ -250,7 +253,10 @@ class _AdminSignaturesScreenState extends State<AdminSignaturesScreen> {
                 ],
               ),
               const SizedBox(height: 4),
-              Text(s.name, style: screenText(size: 15, weight: FontWeight.w600)),
+              Text(
+                s.name,
+                style: screenText(size: 15, weight: FontWeight.w600),
+              ),
               for (final l in s.positionLines)
                 Text(l, style: screenText(size: 13.5)),
               Text(
@@ -279,7 +285,8 @@ class _AdminSignaturesScreenState extends State<AdminSignaturesScreen> {
         const ScreenHeader(
           icon: AdminSignaturesScreen.menuIcon,
           title: AdminSignaturesScreen.menuTitle,
-          subtitle: 'ลายเซ็นที่พิมพ์บนใบเสร็จรับเงิน แยกผู้รับเงิน และ ผอ.กองการเงินฯ / เหรัญญิก',
+          subtitle:
+              'ลายเซ็นที่พิมพ์บนใบเสร็จรับเงิน แยกผู้รับเงิน และ ผอ.กองการเงินฯ / เหรัญญิก',
           bullets: [
             'ลายเซ็นมีผลกับใบเสร็จตั้งแต่เดือนที่กำหนด จนกว่าจะมีลายเซ็นใหม่ของชนิดเดียวกัน',
             'รูป JPEG หรือ PNG ไม่เกิน 2 MB พื้นหลังขาวหรือโปร่งใส',
@@ -366,7 +373,10 @@ class _AdminSignaturesScreenState extends State<AdminSignaturesScreen> {
                       key: AdminSignaturesScreen.pickKey,
                       onPressed: _saving ? null : _pick,
                       icon: const Icon(Icons.image_outlined),
-                      label: Text('เลือกรูปลายเซ็น', style: screenText(size: 14)),
+                      label: Text(
+                        'เลือกรูปลายเซ็น',
+                        style: screenText(size: 14),
+                      ),
                     ),
                     if (image != null)
                       Container(
@@ -378,10 +388,8 @@ class _AdminSignaturesScreenState extends State<AdminSignaturesScreen> {
                         child: Image.memory(
                           image.bytes,
                           height: 60,
-                          errorBuilder: (_, _, _) => Text(
-                            image.name,
-                            style: screenText(size: 13),
-                          ),
+                          errorBuilder: (_, _, _) =>
+                              Text(image.name, style: screenText(size: 13)),
                         ),
                       ),
                     if (image != null)

@@ -124,7 +124,8 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
         const ScreenHeader(
           icon: AdminUploadersScreen.menuIcon,
           title: AdminUploadersScreen.menuTitle,
-          subtitle: 'ผู้ที่นำแบบฟอร์มและทะเบียนคุมรายชื่อเข้าระบบได้ และดูรายงานฌาปนกิจได้',
+          subtitle:
+              'ผู้ที่นำแบบฟอร์มและทะเบียนคุมรายชื่อเข้าระบบได้ และดูรายงานฌาปนกิจได้',
           bullets: [
             'เพิ่มด้วยเลขบัตรประชาชน ระบบอ่านชื่อจากข้อมูลบุคลากร (DPIS)',
             'เพิ่ม/ลบแล้วมีผลเมื่อผู้นั้นเข้าสู่ระบบครั้งถัดไป',
@@ -156,14 +157,19 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                     validator: (v) {
                       final s = (v ?? '').trim();
                       if (s.isEmpty) return 'กรุณากรอกเลขบัตรประชาชน';
-                      if (!Util.isValidThaiId(s)) return 'เลขบัตรประชาชนไม่ถูกต้อง';
+                      if (!Util.isValidThaiId(s)) {
+                        return 'เลขบัตรประชาชนไม่ถูกต้อง';
+                      }
                       return null;
                     },
                     onFieldSubmitted: (_) => _add(),
                     decoration: InputDecoration(
                       labelText: 'เลขบัตรประชาชน 13 หลัก',
                       labelStyle: screenText(color: AppTheme.textSecondary),
-                      errorStyle: screenText(size: 12.5, color: AppTheme.dangerColor),
+                      errorStyle: screenText(
+                        size: 12.5,
+                        color: AppTheme.dangerColor,
+                      ),
                       prefixIcon: const Icon(Icons.credit_card),
                       isDense: true,
                       filled: true,
@@ -214,7 +220,10 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                           padding: const EdgeInsets.all(6),
                           child: Text(
                             u.fullName.isEmpty ? '-' : u.fullName,
-                            style: screenText(size: 14.5, weight: FontWeight.w600),
+                            style: screenText(
+                              size: 14.5,
+                              weight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -229,7 +238,10 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                         flex: 4,
                         child: Text(
                           '${u.addedBy ?? '-'} · ${Util.thaiDateOf(u.addedAt)}',
-                          style: screenText(size: 13, color: AppTheme.textSecondary),
+                          style: screenText(
+                            size: 13,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                       ),
                       Expanded(

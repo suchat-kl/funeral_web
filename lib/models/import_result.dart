@@ -36,5 +36,7 @@ class LegacyImportResult {
 
   /// มีปัญหาที่ผู้ดูแลต้องตรวจ
   bool get hasProblems =>
-      missingFiles.isNotEmpty || invalidRows.isNotEmpty || filesWithoutRow.isNotEmpty;
+      missingFiles.isNotEmpty ||
+      invalidRows.isNotEmpty ||
+      filesWithoutRow.isNotEmpty;
 }

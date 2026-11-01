@@ -114,8 +114,9 @@ class _UploadFilesScreenState extends State<UploadFilesScreen> {
   }
 
   Future<void> _pick() async {
-    final picked = await (widget.picker ??
-        () => pickDocumentFile(maxBytes: ApiService.maxUploadBytes))();
+    final picked =
+        await (widget.picker ??
+            () => pickDocumentFile(maxBytes: ApiService.maxUploadBytes))();
     if (picked == null || !mounted) return;
     final dot = picked.name.lastIndexOf('.');
     final ext = dot < 0 ? '' : picked.name.substring(dot + 1).toLowerCase();
@@ -127,8 +128,7 @@ class _UploadFilesScreenState extends State<UploadFilesScreen> {
             'รับเฉพาะไฟล์ ${ApiService.uploadExtensions.join(' ')} (ไฟล์ที่เลือก: ${picked.name})';
       } else if (picked.size > ApiService.maxUploadBytes) {
         _file = null;
-        _fileError =
-            'ไฟล์ใหญ่เกิน 20 MB (${Util.formatFileSize(picked.size)})';
+        _fileError = 'ไฟล์ใหญ่เกิน 20 MB (${Util.formatFileSize(picked.size)})';
       } else {
         _file = picked;
         _fileError = null;
@@ -416,7 +416,9 @@ class _UploadFilesScreenState extends State<UploadFilesScreen> {
                       key: UploadFilesScreen.editKey(f.id),
                       tooltip: 'แก้ไขรายละเอียด',
                       icon: const Icon(Icons.edit, color: AppTheme.editColor),
-                      onPressed: _busyIds.contains(f.id) ? null : () => _edit(f),
+                      onPressed: _busyIds.contains(f.id)
+                          ? null
+                          : () => _edit(f),
                     ),
                     IconButton(
                       key: UploadFilesScreen.deleteKey(f.id),

@@ -157,33 +157,100 @@ class FakeBackend implements HttpClientAdapter {
   /// แบบฟอร์มทั่วไป (fileFor 1/2/3) — backend จริงกรองตามผู้ดู ที่นี่กรองแบบเดียวกัน
   List<Map<String, dynamic>> generalFiles = [
     _file('g1', 1, 'แบบฟอร์ม', 'แบบคำขอสมัครสมาชิก', 'form1.pdf', 3),
-    _file('g2', 2, 'แบบฟอร์ม', 'แบบเปลี่ยนผู้รับเงิน (ข้าราชการ)', 'form2.docx', 1),
+    _file(
+      'g2',
+      2,
+      'แบบฟอร์ม',
+      'แบบเปลี่ยนผู้รับเงิน (ข้าราชการ)',
+      'form2.docx',
+      1,
+    ),
     _file('g3', 3, 'ประกาศ', 'ประกาศอัตราเงินสงเคราะห์', 'notice.pdf', 3),
-    _file('g4', 4, 'แบบฟอร์ม', 'แบบเปลี่ยนผู้รับเงิน (ลูกจ้างประจำ)', 'form4.xlsx', 2),
+    _file(
+      'g4',
+      4,
+      'แบบฟอร์ม',
+      'แบบเปลี่ยนผู้รับเงิน (ลูกจ้างประจำ)',
+      'form4.xlsx',
+      2,
+    ),
   ];
 
   /// ทะเบียนคุม: ปี-เดือน → รายการ
   Map<String, List<Map<String, dynamic>>> monthYearFiles = {
     '2569-09': [
-      _file('m1', 1, 'ทะเบียนคุม', 'ทะเบียนคุม ก.ย. 69 ข้าราชการ', 'reg-g.pdf', 1, ym: '2569-09'),
-      _file('m2', 2, 'ทะเบียนคุม', 'ทะเบียนคุม ก.ย. 69 ลูกจ้าง', 'reg-e.pdf', 2, ym: '2569-09'),
+      _file(
+        'm1',
+        1,
+        'ทะเบียนคุม',
+        'ทะเบียนคุม ก.ย. 69 ข้าราชการ',
+        'reg-g.pdf',
+        1,
+        ym: '2569-09',
+      ),
+      _file(
+        'm2',
+        2,
+        'ทะเบียนคุม',
+        'ทะเบียนคุม ก.ย. 69 ลูกจ้าง',
+        'reg-e.pdf',
+        2,
+        ym: '2569-09',
+      ),
     ],
     '2569-08': [
-      _file('m3', 3, 'ทะเบียนคุม', 'ทะเบียนคุม ส.ค. 69', 'reg-08.pdf', 3, ym: '2569-08'),
+      _file(
+        'm3',
+        3,
+        'ทะเบียนคุม',
+        'ทะเบียนคุม ส.ค. 69',
+        'reg-08.pdf',
+        3,
+        ym: '2569-08',
+      ),
     ],
   };
 
   /// งวดใบเสร็จของสมาชิก
   List<Map<String, dynamic>> periods = [
-    {'receipt_no': '5003', 'receipt_year': '2569', 'month_desc': 'ก.ค. 69 - ธ.ค. 69', 'receipt_date': '2026-12-31'},
-    {'receipt_no': '5002', 'receipt_year': '2569', 'month_desc': 'ม.ค. 69 - มิ.ย. 69', 'receipt_date': '2026-06-30'},
-    {'receipt_no': '5001', 'receipt_year': '2568', 'month_desc': 'ก.ค. 68 - ธ.ค. 68', 'receipt_date': '2025-12-31'},
+    {
+      'receipt_no': '5003',
+      'receipt_year': '2569',
+      'month_desc': 'ก.ค. 69 - ธ.ค. 69',
+      'receipt_date': '2026-12-31',
+    },
+    {
+      'receipt_no': '5002',
+      'receipt_year': '2569',
+      'month_desc': 'ม.ค. 69 - มิ.ย. 69',
+      'receipt_date': '2026-06-30',
+    },
+    {
+      'receipt_no': '5001',
+      'receipt_year': '2568',
+      'month_desc': 'ก.ค. 68 - ธ.ค. 68',
+      'receipt_date': '2025-12-31',
+    },
   ];
 
   /// ผลค้นสมาชิก
   List<Map<String, dynamic>> memberHits = [
-    {'member_no': '81001', 'title': 'นาย', 'firstname': 'ทดสอบ', 'lastname': 'หนึ่ง', 'org_name': 'สำนักทดสอบ', 'membership': 'N'},
-    {'member_no': '81002', 'title': 'นาง', 'firstname': 'ทดสอบ', 'lastname': 'สอง', 'org_name': 'แขวงทดสอบ', 'membership': 'N'},
+    {
+      'member_no': '81001',
+      'title': 'นาย',
+      'firstname': 'ทดสอบ',
+      'lastname': 'หนึ่ง',
+      'org_name': 'สำนักทดสอบ',
+      'membership': 'N',
+    },
+    {
+      'member_no': '81002',
+      'title': 'นาง',
+      'firstname': 'ทดสอบ',
+      'lastname': 'สอง',
+      'org_name': 'แขวงทดสอบ',
+      'membership': 'N',
+    },
   ];
 
   /// ผลจำลองของ ThaID ต่อ state (เทสต์ตั้งก่อนกดปุ่ม — ตัวเปิด ThaID ปลอมคืน state นี้)
@@ -227,22 +294,71 @@ class FakeBackend implements HttpClientAdapter {
     },
     'slip': {'count': 2, 'not_in_chapana': 0},
     'items': [
-      {'idcard': fakeIdcard('300000000001'), 'name': 'ทดสอบ หักไม่ได้', 'member_no': '60001', 'dept_name': 'สำนักทดสอบ', 'org_code': '01', 'per_status': 1, 'retired': false, 'amount': '100.00', 'slip_amount': '50.00', 'status': 'MISMATCH', 'pay_for': 'ศพที่ 1'},
-      {'idcard': fakeIdcard('300000000002'), 'name': 'ทดสอบ เกษียณ', 'member_no': '60002', 'dept_name': 'แขวงทดสอบ', 'org_code': '02', 'per_status': 2, 'retired': true, 'amount': '100.00', 'slip_amount': '0.00', 'status': 'NOT_IN_SLIP', 'pay_for': ''},
+      {
+        'idcard': fakeIdcard('300000000001'),
+        'name': 'ทดสอบ หักไม่ได้',
+        'member_no': '60001',
+        'dept_name': 'สำนักทดสอบ',
+        'org_code': '01',
+        'per_status': 1,
+        'retired': false,
+        'amount': '100.00',
+        'slip_amount': '50.00',
+        'status': 'MISMATCH',
+        'pay_for': 'ศพที่ 1',
+      },
+      {
+        'idcard': fakeIdcard('300000000002'),
+        'name': 'ทดสอบ เกษียณ',
+        'member_no': '60002',
+        'dept_name': 'แขวงทดสอบ',
+        'org_code': '02',
+        'per_status': 2,
+        'retired': true,
+        'amount': '100.00',
+        'slip_amount': '0.00',
+        'status': 'NOT_IN_SLIP',
+        'pay_for': '',
+      },
     ],
     'success': true,
   };
 
   List<Map<String, dynamic>> retired = [
-    {'type': 'G', 'idcard': fakeIdcard('300000000003'), 'title': 'นาย', 'name': 'ทดสอบ', 'surname': 'พ้นสภาพ', 'divname': 'สำนักทดสอบ', 'pos_name': 'นายช่าง', 'member_no': '60003', 'per_status': '2'},
+    {
+      'type': 'G',
+      'idcard': fakeIdcard('300000000003'),
+      'title': 'นาย',
+      'name': 'ทดสอบ',
+      'surname': 'พ้นสภาพ',
+      'divname': 'สำนักทดสอบ',
+      'pos_name': 'นายช่าง',
+      'member_no': '60003',
+      'per_status': '2',
+    },
   ];
 
   List<Map<String, dynamic>> uploaders = [
-    {'id': 'up1', 'idcard': fakeIdcard('100000000002'), 'fullName': 'ทดสอบ นำไฟล์เข้า', 'addedBy': 'admin1', 'addedAt': '2026-10-28T10:00:00'},
+    {
+      'id': 'up1',
+      'idcard': fakeIdcard('100000000002'),
+      'fullName': 'ทดสอบ นำไฟล์เข้า',
+      'addedBy': 'admin1',
+      'addedAt': '2026-10-28T10:00:00',
+    },
   ];
 
   List<Map<String, dynamic>> signatures = [
-    {'id': 's1', 'kind': 'RECEIVER', 'name': '(ทดสอบ รับเงิน)', 'positionLines': ['เจ้าหน้าที่ทดสอบ'], 'effectiveFrom': '2569-10', 'hasImage': true, 'uploadedBy': 'admin1', 'uploadedAt': '2026-10-28T10:00:00'},
+    {
+      'id': 's1',
+      'kind': 'RECEIVER',
+      'name': '(ทดสอบ รับเงิน)',
+      'positionLines': ['เจ้าหน้าที่ทดสอบ'],
+      'effectiveFrom': '2569-10',
+      'hasImage': true,
+      'uploadedBy': 'admin1',
+      'uploadedAt': '2026-10-28T10:00:00',
+    },
   ];
 
   bool twoFactorEnabledFor(String username) => users[username]!.twoFactor;
@@ -360,7 +476,10 @@ class FakeBackend implements HttpClientAdapter {
         ? <String, dynamic>{
             for (final f in data.fields)
               f.key: data.fields.where((x) => x.key == f.key).length > 1
-                  ? [for (final x in data.fields) if (x.key == f.key) x.value]
+                  ? [
+                      for (final x in data.fields)
+                        if (x.key == f.key) x.value,
+                    ]
                   : f.value,
             for (final f in data.files) ...{
               f.key: f.value.filename,
@@ -379,8 +498,7 @@ class FakeBackend implements HttpClientAdapter {
         : null;
     final user = me == null ? null : users[me];
     bool has(String role) => user?.roles.contains(role) ?? false;
-    ResponseBody unauth() =>
-        _err(401, 'UNAUTHENTICATED', 'กรุณาเข้าสู่ระบบ');
+    ResponseBody unauth() => _err(401, 'UNAUTHENTICATED', 'กรุณาเข้าสู่ระบบ');
     ResponseBody forbidden() =>
         _err(403, 'FORBIDDEN', 'คุณไม่มีสิทธิ์ใช้งานส่วนนี้');
 
@@ -400,7 +518,11 @@ class FakeBackend implements HttpClientAdapter {
     if (call == 'POST /api/auth/login/2fa') {
       final username = _challenges[body?['challenge']];
       if (username == null) {
-        return _err(400, 'TWO_FACTOR_REJECTED', 'หมดเวลายืนยันตัวตน กรุณาเข้าสู่ระบบใหม่');
+        return _err(
+          400,
+          'TWO_FACTOR_REJECTED',
+          'หมดเวลายืนยันตัวตน กรุณาเข้าสู่ระบบใหม่',
+        );
       }
       if (body?['code'] != fakeTotpCode) {
         return _err(401, 'TWO_FACTOR_CODE_WRONG', 'รหัส 6 หลักไม่ถูกต้อง');
@@ -461,7 +583,11 @@ class FakeBackend implements HttpClientAdapter {
       final purpose = path.substring('/api/auth/public-thaid/'.length);
       final r = thaid.remove(body?['state']);
       if (r == null) {
-        return _err(400, 'THAID_ERROR', 'คำขอยืนยันตัวตนหมดอายุ กรุณาเริ่มใหม่');
+        return _err(
+          400,
+          'THAID_ERROR',
+          'คำขอยืนยันตัวตนหมดอายุ กรุณาเริ่มใหม่',
+        );
       }
       final wanted = purpose == 'login'
           ? 'login'
@@ -469,7 +595,11 @@ class FakeBackend implements HttpClientAdapter {
           ? 'register'
           : 'reset';
       if (r.purpose != wanted) {
-        return _err(400, 'THAID_ERROR', 'ผลยืนยันตัวตนนี้ใช้กับรายการนี้ไม่ได้');
+        return _err(
+          400,
+          'THAID_ERROR',
+          'ผลยืนยันตัวตนนี้ใช้กับรายการนี้ไม่ได้',
+        );
       }
       final account = users.entries
           .where((e) => e.value.idcard == r.idcard)
@@ -477,13 +607,21 @@ class FakeBackend implements HttpClientAdapter {
           .firstOrNull;
       if (purpose == 'login') {
         if (account == null) {
-          return _err(404, 'NOT_REGISTERED', 'ยังไม่พบบัญชีของท่าน กรุณาลงทะเบียนก่อน');
+          return _err(
+            404,
+            'NOT_REGISTERED',
+            'ยังไม่พบบัญชีของท่าน กรุณาลงทะเบียนก่อน',
+          );
         }
         return _json(200, _loginBody(account));
       }
       if (purpose == 'reset') {
         if (account == null) {
-          return _err(404, 'NOT_REGISTERED', 'ยังไม่พบบัญชีของท่าน กรุณาลงทะเบียนก่อน');
+          return _err(
+            404,
+            'NOT_REGISTERED',
+            'ยังไม่พบบัญชีของท่าน กรุณาลงทะเบียนก่อน',
+          );
         }
         users[account]!.password = body!['newPassword'] as String;
         return _json(200, {
@@ -540,7 +678,8 @@ class FakeBackend implements HttpClientAdapter {
       );
       return _json(200, {
         'success': true,
-        'message': 'ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่านที่ตั้งไว้',
+        'message':
+            'ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่านที่ตั้งไว้',
         'username': name,
       });
     }
@@ -548,12 +687,20 @@ class FakeBackend implements HttpClientAdapter {
     // ───────── passkey สาธารณะ ─────────
     if (call == 'POST /api/public/passkey/options') {
       return _json(200, {
-        'publicKey': {'challenge': 'Y2hhbGxlbmdl', 'rpId': 'inf.doh.go.th', 'allowCredentials': []},
+        'publicKey': {
+          'challenge': 'Y2hhbGxlbmdl',
+          'rpId': 'inf.doh.go.th',
+          'allowCredentials': [],
+        },
       });
     }
     if (call == 'POST /api/public/passkey/login') {
       if (body?['credential'] is! String) {
-        return _err(400, 'PASSKEY_INVALID', 'ยืนยันตัวตนด้วย passkey ไม่สำเร็จ');
+        return _err(
+          400,
+          'PASSKEY_INVALID',
+          'ยืนยันตัวตนด้วย passkey ไม่สำเร็จ',
+        );
       }
       return _json(200, _loginBody('member1'));
     }
@@ -572,7 +719,9 @@ class FakeBackend implements HttpClientAdapter {
             f,
       ]);
     }
-    final gDl = RegExp(r'^/api/public/general-files/([^/]+)/download$').firstMatch(path);
+    final gDl = RegExp(
+      r'^/api/public/general-files/([^/]+)/download$',
+    ).firstMatch(path);
     if (gDl != null) {
       final f = generalFiles.where((x) => x['id'] == gDl.group(1)).firstOrNull;
       if (f == null) return _err(404, 'NOT_FOUND', 'ไม่พบไฟล์');
@@ -586,15 +735,26 @@ class FakeBackend implements HttpClientAdapter {
       return _json(200, monthYearFiles.keys.toList());
     }
     if (call == 'GET /api/monthyear-files') {
-      return _json(200, monthYearFiles[options.queryParameters['yearMonth']] ?? []);
+      return _json(
+        200,
+        monthYearFiles[options.queryParameters['yearMonth']] ?? [],
+      );
     }
-    final mDl = RegExp(r'^/api/monthyear-files/([^/]+)/download$').firstMatch(path);
+    final mDl = RegExp(
+      r'^/api/monthyear-files/([^/]+)/download$',
+    ).firstMatch(path);
     if (mDl != null) {
-      return _bytes(fakePdf, 'application/pdf', 'ทะเบียนคุม-${mDl.group(1)}.pdf');
+      return _bytes(
+        fakePdf,
+        'application/pdf',
+        'ทะเบียนคุม-${mDl.group(1)}.pdf',
+      );
     }
 
     // ───────── นำไฟล์เข้า ─────────
-    final up = RegExp(r'^/api/upload/(general|monthyear)-files(?:/([^/]+))?$').firstMatch(path);
+    final up = RegExp(
+      r'^/api/upload/(general|monthyear)-files(?:/([^/]+))?$',
+    ).firstMatch(path);
     if (up != null) {
       if (!has('UPLOADER') && !has('ADMIN')) return forbidden();
       final kind = up.group(1)!;
@@ -652,7 +812,9 @@ class FakeBackend implements HttpClientAdapter {
     if (call == 'POST /api/receipts/pdf') {
       if (!has('MEMBER')) return forbidden();
       final nos = body?['receiptNos'] as List? ?? const [];
-      if (nos.isEmpty) return _err(400, 'BAD_REQUEST', 'กรุณาเลือกงวดอย่างน้อย 1 งวด');
+      if (nos.isEmpty) {
+        return _err(400, 'BAD_REQUEST', 'กรุณาเลือกงวดอย่างน้อย 1 งวด');
+      }
       return _bytes(fakePdf, 'application/pdf', 'receipt.pdf');
     }
     if (call == 'GET /api/members/search') {
@@ -660,7 +822,10 @@ class FakeBackend implements HttpClientAdapter {
       final q = '${options.queryParameters['q']}';
       return _json(200, [
         for (final m in memberHits)
-          if ('${m['member_no']} ${m['firstname']} ${m['lastname']}'.contains(q)) m,
+          if ('${m['member_no']} ${m['firstname']} ${m['lastname']}'.contains(
+            q,
+          ))
+            m,
       ]);
     }
     if (call == 'POST /api/cash-receipts/pdf') {
@@ -672,7 +837,11 @@ class FakeBackend implements HttpClientAdapter {
       final own = target == user.memberNo;
       final type = body?['passwordType'];
       if (!own && (type == 'idcard' || type == 'birthdate')) {
-        return _err(400, 'BAD_REQUEST', 'ใช้เลขบัตรเป็นรหัสได้เฉพาะใบเสร็จของตนเอง');
+        return _err(
+          400,
+          'BAD_REQUEST',
+          'ใช้เลขบัตรเป็นรหัสได้เฉพาะใบเสร็จของตนเอง',
+        );
       }
       return _bytes(fakePdf, 'application/pdf', 'cash-receipt.pdf');
     }
@@ -683,7 +852,11 @@ class FakeBackend implements HttpClientAdapter {
       if (path == '/api/reports/chapana-slip') {
         final r = slipReport;
         if (r == null) {
-          return _err(503, 'DPAY_API_NOT_CONFIGURED', 'ยังไม่ได้ตั้งค่าการเชื่อมต่อระบบหักหนี้');
+          return _err(
+            503,
+            'DPAY_API_NOT_CONFIGURED',
+            'ยังไม่ได้ตั้งค่าการเชื่อมต่อระบบหักหนี้',
+          );
         }
         return _json(200, r);
       }
@@ -691,7 +864,12 @@ class FakeBackend implements HttpClientAdapter {
         return _bytes(fakePdf, 'application/pdf', 'rep9-102569-G.pdf');
       }
       if (path == '/api/reports/chapana-retired') {
-        return _json(200, {'month': '10', 'year': '2569', 'items': retired, 'success': true});
+        return _json(200, {
+          'month': '10',
+          'year': '2569',
+          'items': retired,
+          'success': true,
+        });
       }
       if (path == '/api/reports/chapana-retired/pdf') {
         return _bytes(fakePdf, 'application/pdf', 'rep10-102569.pdf');
@@ -708,7 +886,8 @@ class FakeBackend implements HttpClientAdapter {
       }
       return _json(200, {
         'secret': fakeTotpSecret,
-        'otpauth_uri': 'otpauth://totp/Funeral:$me?secret=$fakeTotpSecret&issuer=Funeral',
+        'otpauth_uri':
+            'otpauth://totp/Funeral:$me?secret=$fakeTotpSecret&issuer=Funeral',
       });
     }
     if (call == 'POST /api/account/2fa/enable') {
@@ -716,7 +895,10 @@ class FakeBackend implements HttpClientAdapter {
         return _err(401, 'TWO_FACTOR_CODE_WRONG', 'รหัส 6 หลักไม่ถูกต้อง');
       }
       user.twoFactor = true;
-      return _json(200, {'message': 'เปิดใช้การยืนยันตัวตนสองขั้นเรียบร้อย', 'success': true});
+      return _json(200, {
+        'message': 'เปิดใช้การยืนยันตัวตนสองขั้นเรียบร้อย',
+        'success': true,
+      });
     }
     if (call == 'POST /api/account/2fa/disable') {
       if (body?['currentPassword'] != user.password) {
@@ -726,7 +908,10 @@ class FakeBackend implements HttpClientAdapter {
         return _err(401, 'TWO_FACTOR_CODE_WRONG', 'รหัส 6 หลักไม่ถูกต้อง');
       }
       user.twoFactor = false;
-      return _json(200, {'message': 'ปิดการยืนยันตัวตนสองขั้นเรียบร้อย', 'success': true});
+      return _json(200, {
+        'message': 'ปิดการยืนยันตัวตนสองขั้นเรียบร้อย',
+        'success': true,
+      });
     }
     if (call == 'GET /api/account/passkeys') {
       return _json(200, passkeys[me] ?? []);
@@ -736,7 +921,10 @@ class FakeBackend implements HttpClientAdapter {
         return _err(400, 'BAD_REQUEST', 'รหัสผ่านปัจจุบันไม่ถูกต้อง');
       }
       return _json(200, {
-        'publicKey': {'challenge': 'Y2hhbGxlbmdl', 'rp': {'id': 'inf.doh.go.th'}},
+        'publicKey': {
+          'challenge': 'Y2hhbGxlbmdl',
+          'rp': {'id': 'inf.doh.go.th'},
+        },
       });
     }
     if (call == 'POST /api/account/passkeys') {
@@ -761,9 +949,21 @@ class FakeBackend implements HttpClientAdapter {
       if (!has('ADMIN')) return forbidden();
       if (call == 'GET /api/admin/roles') {
         return _json(200, [
-          {'name': 'NON_MEMBER', 'description': 'ไม่ใช่สมาชิก', 'assignable': false},
-          {'name': 'MEMBER', 'description': 'สมาชิกฌาปนกิจ', 'assignable': false},
-          {'name': 'UPLOADER', 'description': 'ผู้นำไฟล์เข้าระบบ', 'assignable': false},
+          {
+            'name': 'NON_MEMBER',
+            'description': 'ไม่ใช่สมาชิก',
+            'assignable': false,
+          },
+          {
+            'name': 'MEMBER',
+            'description': 'สมาชิกฌาปนกิจ',
+            'assignable': false,
+          },
+          {
+            'name': 'UPLOADER',
+            'description': 'ผู้นำไฟล์เข้าระบบ',
+            'assignable': false,
+          },
           {'name': 'ADMIN', 'description': 'ผู้ดูแลระบบ', 'assignable': true},
         ]);
       }
@@ -773,7 +973,9 @@ class FakeBackend implements HttpClientAdapter {
         final page = int.parse('${options.queryParameters['page'] ?? 0}');
         final all = [
           for (final e in users.entries)
-            if (kw.isEmpty || e.key.contains(kw) || e.value.fullName.contains(kw))
+            if (kw.isEmpty ||
+                e.key.contains(kw) ||
+                e.value.fullName.contains(kw))
               _userDto(e.key, e.value),
         ];
         final pages = (all.length / size).ceil();
@@ -785,9 +987,13 @@ class FakeBackend implements HttpClientAdapter {
           'pageSize': size,
         });
       }
-      final um = RegExp(r'^/api/admin/users/([^/]+)(?:/(reset-password|disable-2fa|delete-passkeys))?$').firstMatch(path);
+      final um = RegExp(
+        r'^/api/admin/users/([^/]+)(?:/(reset-password|disable-2fa|delete-passkeys))?$',
+      ).firstMatch(path);
       if (um != null) {
-        final entry = users.entries.where((e) => e.value.id == um.group(1)).firstOrNull;
+        final entry = users.entries
+            .where((e) => e.value.id == um.group(1))
+            .firstOrNull;
         if (entry == null) return _err(404, 'NOT_FOUND', 'ไม่พบผู้ใช้ที่ระบุ');
         final u = entry.value;
         switch (um.group(2)) {
@@ -795,22 +1001,29 @@ class FakeBackend implements HttpClientAdapter {
             if (method == 'PUT') {
               u.personType = body?['personType'] as String?;
               final assigned = List<String>.from(body?['assignedRoles'] ?? []);
-              u.roles = [
-                ...u.roles.where((r) => r != 'ADMIN'),
-                ...assigned,
-              ];
+              u.roles = [...u.roles.where((r) => r != 'ADMIN'), ...assigned];
               return _json(200, _userDto(entry.key, u));
             }
           case 'reset-password':
             u.password = '${body?['newPassword']}';
             u.mustChange = true;
-            return _json(200, {'message': 'ตั้งรหัสผ่านใหม่สำเร็จ ผู้ใช้ต้องเปลี่ยนรหัสผ่านตอนเข้าสู่ระบบครั้งถัดไป', 'success': true});
+            return _json(200, {
+              'message':
+                  'ตั้งรหัสผ่านใหม่สำเร็จ ผู้ใช้ต้องเปลี่ยนรหัสผ่านตอนเข้าสู่ระบบครั้งถัดไป',
+              'success': true,
+            });
           case 'disable-2fa':
             u.twoFactor = false;
-            return _json(200, {'message': 'ปิดการยืนยันตัวตนสองขั้นของผู้ใช้นี้แล้ว', 'success': true});
+            return _json(200, {
+              'message': 'ปิดการยืนยันตัวตนสองขั้นของผู้ใช้นี้แล้ว',
+              'success': true,
+            });
           case 'delete-passkeys':
             passkeys.remove(entry.key);
-            return _json(200, {'message': 'ลบ passkey ทั้งหมดของผู้ใช้นี้แล้ว', 'success': true});
+            return _json(200, {
+              'message': 'ลบ passkey ทั้งหมดของผู้ใช้นี้แล้ว',
+              'success': true,
+            });
         }
       }
       if (call == 'GET /api/admin/uploaders') return _json(200, uploaders);
@@ -832,7 +1045,11 @@ class FakeBackend implements HttpClientAdapter {
       final ud = RegExp(r'^/api/admin/uploaders/([^/]+)$').firstMatch(path);
       if (ud != null && method == 'DELETE') {
         uploaders.removeWhere((u) => u['id'] == ud.group(1));
-        return _json(200, {'message': 'ลบผู้มีสิทธิ์นำไฟล์เข้าเรียบร้อย มีผลเมื่อผู้นั้นเข้าสู่ระบบครั้งถัดไป', 'success': true});
+        return _json(200, {
+          'message':
+              'ลบผู้มีสิทธิ์นำไฟล์เข้าเรียบร้อย มีผลเมื่อผู้นั้นเข้าสู่ระบบครั้งถัดไป',
+          'success': true,
+        });
       }
       if (call == 'GET /api/admin/signatures') return _json(200, signatures);
       if (call == 'POST /api/admin/signatures') {
@@ -841,7 +1058,7 @@ class FakeBackend implements HttpClientAdapter {
           'id': 's${++_serial}',
           'kind': body?['kind'],
           'name': body?['name'],
-          'positionLines': lines is List ? lines : [if (lines != null) lines],
+          'positionLines': lines is List ? lines : [?lines],
           'effectiveFrom': body?['effectiveFrom'],
           'hasImage': true,
           'uploadedBy': me,
@@ -850,19 +1067,27 @@ class FakeBackend implements HttpClientAdapter {
         signatures.insert(0, s);
         return _json(200, s);
       }
-      final si = RegExp(r'^/api/admin/signatures/([^/]+)(/image)?$').firstMatch(path);
+      final si = RegExp(
+        r'^/api/admin/signatures/([^/]+)(/image)?$',
+      ).firstMatch(path);
       if (si != null) {
         if (si.group(2) != null) {
-          return ResponseBody.fromBytes(fakePng, 200, headers: {
-            Headers.contentTypeHeader: ['image/png'],
-          });
+          return ResponseBody.fromBytes(
+            fakePng,
+            200,
+            headers: {
+              Headers.contentTypeHeader: ['image/png'],
+            },
+          );
         }
         if (method == 'DELETE') {
           signatures.removeWhere((s) => s['id'] == si.group(1));
           return _json(200, {'message': 'ลบลายเซ็นเรียบร้อย', 'success': true});
         }
       }
-      final imp = RegExp(r'^/api/admin/import/(general|monthyear)$').firstMatch(path);
+      final imp = RegExp(
+        r'^/api/admin/import/(general|monthyear)$',
+      ).firstMatch(path);
       if (imp != null) {
         return _json(200, {
           'rows': 5,

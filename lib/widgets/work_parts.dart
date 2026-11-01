@@ -156,7 +156,8 @@ class MonthYearPicker extends StatelessWidget {
                 min: minYear < cy ? minYear : cy,
                 max: cy,
                 enabled: enabled,
-                onChanged: (y) => onChanged(y, y == cy && month > cm ? cm : month),
+                onChanged: (y) =>
+                    onChanged(y, y == cy && month > cm ? cm : month),
               ),
             ],
           ),

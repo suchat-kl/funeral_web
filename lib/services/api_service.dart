@@ -227,14 +227,19 @@ class ApiService {
       throw const ApiException('ไม่พบ access token ในคำตอบของระบบ');
     }
     await storage.write(key: accessTokenKey, value: access);
-    await storage.write(key: refreshTokenKey, value: '${data['refresh_token']}');
+    await storage.write(
+      key: refreshTokenKey,
+      value: '${data['refresh_token']}',
+    );
     _loginMethod = method;
     await storage.write(key: loginMethodKey, value: method);
     _previousLogin = null;
     await _applyProfile(data);
     _isLoggedIn = true;
     onLoginStateChanged?.call(true);
-    if (AppLogger.on) AppLogger.i('🟢 เข้าสู่ระบบ: $_username ($method) $_roles');
+    if (AppLogger.on) {
+      AppLogger.i('🟢 เข้าสู่ระบบ: $_username ($method) $_roles');
+    }
   }
 
   /// กู้ session จากที่เก็บของเบราว์เซอร์ตอนเปิดหน้าเว็บ (ยังไม่ตรวจกับ backend — ดู [refreshProfile])
@@ -330,15 +335,11 @@ class ApiService {
       await _applyLogin(data, 'password');
       return data;
     }
-    throw _apiError(
-      r.statusCode,
-      r.data,
-      switch (r.statusCode) {
-        401 => 'รหัส 6 หลักไม่ถูกต้อง กรุณาลองใหม่',
-        400 => 'หมดเวลายืนยันตัวตน กรุณาเข้าสู่ระบบใหม่อีกครั้ง',
-        _ => 'ยืนยันตัวตนสองขั้นไม่สำเร็จ',
-      },
-    );
+    throw _apiError(r.statusCode, r.data, switch (r.statusCode) {
+      401 => 'รหัส 6 หลักไม่ถูกต้อง กรุณาลองใหม่',
+      400 => 'หมดเวลายืนยันตัวตน กรุณาเข้าสู่ระบบใหม่อีกครั้ง',
+      _ => 'ยืนยันตัวตนสองขั้นไม่สำเร็จ',
+    });
   }
 
   /// เข้าสู่ระบบด้วยผล ThaID ของ [state] (ใช้ได้ครั้งเดียว) — ไม่มีขั้น 2FA
@@ -407,7 +408,10 @@ class ApiService {
         throw ApiException('ต่ออายุ token ไม่สำเร็จ (${r.statusCode})');
       }
       final data = r.data as Map;
-      await storage.write(key: accessTokenKey, value: '${data['access_token']}');
+      await storage.write(
+        key: accessTokenKey,
+        value: '${data['access_token']}',
+      );
       await storage.write(
         key: refreshTokenKey,
         value: '${data['refresh_token']}',
@@ -697,10 +701,7 @@ class ApiService {
     final r = await _authedRequest(
       'POST',
       '/api/account/passkeys',
-      data: {
-        'name': (name ?? '').trim(),
-        'credential': jsonEncode(credential),
-      },
+      data: {'name': (name ?? '').trim(), 'credential': jsonEncode(credential)},
     );
     if (r.statusCode == 200 && r.data is Map) {
       return PasskeyInfo.fromJson(Map<String, dynamic>.from(r.data));
@@ -710,7 +711,9 @@ class ApiService {
 
   Future<String> passkeyDelete(String id) async {
     final r = await _authedRequest('DELETE', '/api/account/passkeys/$id');
-    if (r.statusCode == 200) return _messageFrom(r.data) ?? 'ลบ passkey เรียบร้อย';
+    if (r.statusCode == 200) {
+      return _messageFrom(r.data) ?? 'ลบ passkey เรียบร้อย';
+    }
     throw _apiError(r.statusCode, r.data, 'ลบ passkey ไม่สำเร็จ');
   }
 
@@ -793,7 +796,9 @@ class ApiService {
     final r = await _authedRequest(
       'GET',
       '/api/upload/$kind-files',
-      query: {if (yearMonth != null && yearMonth.isNotEmpty) 'yearMonth': yearMonth},
+      query: {
+        if (yearMonth != null && yearMonth.isNotEmpty) 'yearMonth': yearMonth,
+      },
     );
     return _files(r, 'โหลดรายการไฟล์ไม่สำเร็จ');
   }
@@ -878,10 +883,7 @@ class ApiService {
   }) => _download(
     'POST',
     '/api/receipts/pdf',
-    data: {
-      'receiptNos': receiptNos,
-      ..._pdfPassword(passwordType, password),
-    },
+    data: {'receiptNos': receiptNos, ..._pdfPassword(passwordType, password)},
     fallbackName: 'receipt.pdf',
     failMessage: 'สร้างใบเสร็จไม่สำเร็จ',
   );
@@ -1048,11 +1050,9 @@ class ApiService {
   }
 
   Future<String> adminResetPassword(String id, String newPassword) =>
-      _adminAction(
-        '/api/admin/users/$id/reset-password',
-        {'newPassword': newPassword},
-        'ตั้งรหัสผ่านใหม่ไม่สำเร็จ',
-      );
+      _adminAction('/api/admin/users/$id/reset-password', {
+        'newPassword': newPassword,
+      }, 'ตั้งรหัสผ่านใหม่ไม่สำเร็จ');
 
   Future<String> adminDisableTwoFactor(String id) => _adminAction(
     '/api/admin/users/$id/disable-2fa',
@@ -1097,7 +1097,11 @@ class ApiService {
           if (m is Map) Uploader.fromJson(Map<String, dynamic>.from(m)),
       ];
     }
-    throw _apiError(r.statusCode, r.data, 'โหลดรายชื่อผู้มีสิทธิ์นำไฟล์เข้าไม่สำเร็จ');
+    throw _apiError(
+      r.statusCode,
+      r.data,
+      'โหลดรายชื่อผู้มีสิทธิ์นำไฟล์เข้าไม่สำเร็จ',
+    );
   }
 
   /// เพิ่มผู้มีสิทธิ์นำไฟล์เข้าด้วยเลขบัตร (ชื่อจาก DPIS) ห้าม log [idcard]
@@ -1110,7 +1114,11 @@ class ApiService {
     if (r.statusCode == 200 && r.data is Map) {
       return Uploader.fromJson(Map<String, dynamic>.from(r.data));
     }
-    throw _apiError(r.statusCode, r.data, 'เพิ่มผู้มีสิทธิ์นำไฟล์เข้าไม่สำเร็จ');
+    throw _apiError(
+      r.statusCode,
+      r.data,
+      'เพิ่มผู้มีสิทธิ์นำไฟล์เข้าไม่สำเร็จ',
+    );
   }
 
   Future<String> deleteUploader(String id) async {
@@ -1150,7 +1158,9 @@ class ApiService {
         ..add(MapEntry('name', name.trim()))
         ..add(MapEntry('effectiveFrom', effectiveFrom));
       for (final l in positionLines) {
-        if (l.trim().isNotEmpty) form.fields.add(MapEntry('positionLines', l.trim()));
+        if (l.trim().isNotEmpty) {
+          form.fields.add(MapEntry('positionLines', l.trim()));
+        }
       }
       form.files.add(
         MapEntry(
@@ -1172,7 +1182,9 @@ class ApiService {
 
   Future<String> deleteSignature(String id) async {
     final r = await _authedRequest('DELETE', '/api/admin/signatures/$id');
-    if (r.statusCode == 200) return _messageFrom(r.data) ?? 'ลบลายเซ็นเรียบร้อย';
+    if (r.statusCode == 200) {
+      return _messageFrom(r.data) ?? 'ลบลายเซ็นเรียบร้อย';
+    }
     throw _apiError(r.statusCode, r.data, 'ลบลายเซ็นไม่สำเร็จ');
   }
 
@@ -1184,7 +1196,11 @@ class ApiService {
     );
     final bytes = _bytesOf(r.data);
     if (r.statusCode == 200 && bytes != null && bytes.isNotEmpty) return bytes;
-    throw _apiError(r.statusCode, _decodeBody(r.data), 'โหลดรูปลายเซ็นไม่สำเร็จ');
+    throw _apiError(
+      r.statusCode,
+      _decodeBody(r.data),
+      'โหลดรูปลายเซ็นไม่สำเร็จ',
+    );
   }
 
   /// นำเข้า CSV ข้อมูลเดิม ([kind] = general / monthyear) รันซ้ำได้ (ข้ามรายการที่มีแล้ว)
@@ -1224,7 +1240,10 @@ class ApiService {
     throw _apiError(r.statusCode, r.data, fallback);
   }
 
-  static Map<String, dynamic> _publicKeyOf(Response<dynamic> r, String fallback) {
+  static Map<String, dynamic> _publicKeyOf(
+    Response<dynamic> r,
+    String fallback,
+  ) {
     final pk = r.data is Map ? r.data['publicKey'] : null;
     if (r.statusCode == 200 && pk is Map) return Map<String, dynamic>.from(pk);
     throw _apiError(r.statusCode, r.data, fallback);
@@ -1357,9 +1376,8 @@ class ApiService {
           'application/octet-stream';
       return DownloadedFile(
         bytes: bytes,
-        fileName: fileNameFromDisposition(
-              r.headers.value('content-disposition'),
-            ) ??
+        fileName:
+            fileNameFromDisposition(r.headers.value('content-disposition')) ??
             fallbackName,
         mime: mime,
       );
@@ -1421,9 +1439,12 @@ class ApiService {
       'หมดเวลาเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง',
     DioExceptionType.connectionError =>
       'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต',
-    DioExceptionType.badCertificate => 'ใบรับรองความปลอดภัยของเซิร์ฟเวอร์ไม่ถูกต้อง',
+    DioExceptionType.badCertificate =>
+      'ใบรับรองความปลอดภัยของเซิร์ฟเวอร์ไม่ถูกต้อง',
     DioExceptionType.badResponse => switch (e.response?.statusCode) {
-      502 || 503 || 504 => 'เซิร์ฟเวอร์ไม่พร้อมให้บริการชั่วคราว กรุณาลองใหม่ภายหลัง',
+      502 ||
+      503 ||
+      504 => 'เซิร์ฟเวอร์ไม่พร้อมให้บริการชั่วคราว กรุณาลองใหม่ภายหลัง',
       _ => 'เกิดข้อผิดพลาดที่เซิร์ฟเวอร์ (${e.response?.statusCode})',
     },
     _ => 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง',

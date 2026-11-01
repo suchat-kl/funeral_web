@@ -127,7 +127,10 @@ extension SnackBarHelper on BuildContext {
                         Flexible(
                           child: Text(
                             message,
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(
+                              fontFamily: 'NotoSansThai',
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],

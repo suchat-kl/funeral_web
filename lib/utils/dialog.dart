@@ -241,6 +241,7 @@ class AppDialog {
           Text(
             title,
             style: const TextStyle(
+              fontFamily: 'NotoSansThai',
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
@@ -251,7 +252,11 @@ class AppDialog {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+            style: const TextStyle(
+              fontFamily: 'NotoSansThai',
+              fontSize: 16,
+              color: AppTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 24),
           // ปุ่ม
@@ -274,6 +279,7 @@ class AppDialog {
               child: Text(
                 buttonText,
                 style: const TextStyle(
+                  fontFamily: 'NotoSansThai',
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -327,6 +333,7 @@ class AppDialog {
           const Text(
             'ยืนยันการดำเนินการ',
             style: TextStyle(
+              fontFamily: 'NotoSansThai',
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
@@ -337,7 +344,11 @@ class AppDialog {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+            style: const TextStyle(
+              fontFamily: 'NotoSansThai',
+              fontSize: 16,
+              color: AppTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 24),
           // ปุ่ม
@@ -358,6 +369,7 @@ class AppDialog {
                   child: Text(
                     cancelText,
                     style: const TextStyle(
+                      fontFamily: 'NotoSansThai',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -380,6 +392,7 @@ class AppDialog {
                   child: Text(
                     confirmText,
                     style: const TextStyle(
+                      fontFamily: 'NotoSansThai',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),

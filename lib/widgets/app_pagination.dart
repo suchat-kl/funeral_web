@@ -94,13 +94,18 @@ class AppPagination extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               'หน้า ${currentPage + 1} จาก $total',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontFamily: 'NotoSansThai',
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
             ),
             if (summary != null) ...[
               const SizedBox(width: 12),
               Text(
                 summary!,
                 style: const TextStyle(
+                  fontFamily: 'NotoSansThai',
                   fontSize: 13,
                   color: AppTheme.textSecondary,
                 ),
@@ -133,7 +138,13 @@ class AppPagination extends StatelessWidget {
           for (final s in pageSizeOptions)
             DropdownMenuItem<int>(
               value: s,
-              child: Text('$s แถว', style: const TextStyle(fontSize: 13)),
+              child: Text(
+                '$s แถว',
+                style: const TextStyle(
+                  fontFamily: 'NotoSansThai',
+                  fontSize: 13,
+                ),
+              ),
             ),
         ],
         onChanged: (v) {
@@ -175,6 +186,7 @@ class AppPagination extends StatelessWidget {
             child: Text(
               '${page + 1}',
               style: TextStyle(
+                fontFamily: 'NotoSansThai',
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: selected ? Colors.white : AppTheme.textPrimary,

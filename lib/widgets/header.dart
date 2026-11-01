@@ -128,7 +128,9 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
         if (!loggedIn) _guestMenu(context),
         Container(
           margin: EdgeInsets.only(right: isNarrow ? 8 : 16),
-          child: loggedIn ? _userMenu(context) : _loginButton(context, isNarrow),
+          child: loggedIn
+              ? _userMenu(context)
+              : _loginButton(context, isNarrow),
         ),
       ],
     );
@@ -213,7 +215,12 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
       }
     } catch (e) {
       if (AppLogger.on) AppLogger.w('เข้าสู่ระบบด้วย passkey ไม่สำเร็จ');
-      _notify(messenger, e.toString(), AppTheme.dangerColor, Icons.error_outline);
+      _notify(
+        messenger,
+        e.toString(),
+        AppTheme.dangerColor,
+        Icons.error_outline,
+      );
     }
   }
 
@@ -241,7 +248,11 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                   color: const Color(0xFF06115A),
                   child: const Text(
                     'ThaID',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+                    style: TextStyle(
+                      fontFamily: 'NotoSansThai',
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
@@ -355,7 +366,11 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
       child: TextButton.icon(
         key: loginKey,
         onPressed: _loginBusy ? null : () => showLogin(context, authProvider),
-        icon: const Icon(Icons.person, color: AppTheme.onSecondaryColor, size: 20),
+        icon: const Icon(
+          Icons.person,
+          color: AppTheme.onSecondaryColor,
+          size: 20,
+        ),
         label: const Text(
           'เข้าสู่ระบบ',
           style: TextStyle(
@@ -394,21 +409,33 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
             children: [
               Text(
                 authProvider.displayName,
-                style: _menuText.copyWith(fontWeight: FontWeight.bold, fontSize: 15),
+                style: _menuText.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
               Text(
                 '${authProvider.username ?? ''} · ${authProvider.highestRole}',
-                style: _menuText.copyWith(fontSize: 12, color: AppTheme.textSecondary),
+                style: _menuText.copyWith(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               if (authProvider.memberNo != null)
                 Text(
                   'เลขสมาชิก ${authProvider.memberNo}',
-                  style: _menuText.copyWith(fontSize: 12, color: AppTheme.textSecondary),
+                  style: _menuText.copyWith(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               if (authProvider.personType != null)
                 Text(
                   'ประเภทบุคลากร: ${PersonType.nameOf(authProvider.personType)}',
-                  style: _menuText.copyWith(fontSize: 12, color: AppTheme.textSecondary),
+                  style: _menuText.copyWith(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
             ],
           ),

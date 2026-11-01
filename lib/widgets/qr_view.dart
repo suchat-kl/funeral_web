@@ -52,10 +52,7 @@ class QrView extends StatelessWidget {
     return Semantics(
       label: semanticLabel,
       image: true,
-      child: CustomPaint(
-        size: Size.square(size),
-        painter: _QrPainter(matrix),
-      ),
+      child: CustomPaint(size: Size.square(size), painter: _QrPainter(matrix)),
     );
   }
 }

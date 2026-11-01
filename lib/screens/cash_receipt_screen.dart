@@ -69,8 +69,7 @@ class _CashReceiptScreenState extends State<CashReceiptScreen>
   String? get _targetMemberNo => _isStaff ? _picked?.memberNo : _ownMemberNo;
 
   /// ใบเสร็จของตัวเอง (ใช้เลขบัตร/วันเกิดเป็นรหัสได้)
-  bool get _own =>
-      _targetMemberNo != null && _targetMemberNo == _ownMemberNo;
+  bool get _own => _targetMemberNo != null && _targetMemberNo == _ownMemberNo;
 
   List<String> get _passwordOptions =>
       _own ? PdfPassword.forSelf : PdfPassword.forOthers;
@@ -257,8 +256,7 @@ class _CashReceiptScreenState extends State<CashReceiptScreen>
                   AppTheme.successColor,
                   icon: Icons.check_circle_outline,
                 ),
-                if (_own)
-                  StatusChip('ของตัวเอง', AppTheme.infoColor),
+                if (_own) StatusChip('ของตัวเอง', AppTheme.infoColor),
               ],
             ),
           if (_ownMemberNo != null && !_own) ...[

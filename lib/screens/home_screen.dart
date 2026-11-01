@@ -139,7 +139,12 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   /// ตัวหนังสือบนภาพ: ขอบสีเข้มของธีม + ตัวหนังสือสีขาว (ชั้นขอบซ่อนจากโปรแกรมอ่านหน้าจอ)
-  Widget _bannerText(String text, double size, FontWeight weight, double stroke) {
+  Widget _bannerText(
+    String text,
+    double size,
+    FontWeight weight,
+    double stroke,
+  ) {
     final base = TextStyle(
       fontFamily: 'NotoSansThai',
       fontSize: size,
@@ -166,7 +171,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        Text(text, textAlign: TextAlign.center, style: base.copyWith(color: Colors.white)),
+        Text(
+          text,
+          textAlign: TextAlign.center,
+          style: base.copyWith(color: Colors.white),
+        ),
       ],
     );
   }
@@ -176,10 +185,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final loggedIn = auth.isLoggedIn;
     final busy = auth.thaidBusy || auth.passkeyBusy;
     final buttonStyle = ElevatedButton.styleFrom(
-      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 22 : 16, vertical: 14),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 22 : 16,
+        vertical: 14,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
-    const buttonText = TextStyle(fontFamily: 'NotoSansThai', fontSize: 15, fontWeight: FontWeight.w600);
+    const buttonText = TextStyle(
+      fontFamily: 'NotoSansThai',
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+    );
     return Container(
       width: double.infinity,
       constraints: BoxConstraints(minHeight: isDesktop ? 320 : 260),
@@ -198,11 +214,26 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(AppConfig.logoIcon, size: isDesktop ? 48 : 34, color: Colors.white, shadows: _glow),
+          Icon(
+            AppConfig.logoIcon,
+            size: isDesktop ? 48 : 34,
+            color: Colors.white,
+            shadows: _glow,
+          ),
           SizedBox(height: isDesktop ? 12 : 8),
-          _bannerText(AppConfig.systemName, isDesktop ? 34 : 22, FontWeight.bold, isDesktop ? 6 : 4.5),
+          _bannerText(
+            AppConfig.systemName,
+            isDesktop ? 34 : 22,
+            FontWeight.bold,
+            isDesktop ? 6 : 4.5,
+          ),
           const SizedBox(height: 8),
-          _bannerText(AppConfig.orgName, isDesktop ? 19 : 15, FontWeight.w600, 4),
+          _bannerText(
+            AppConfig.orgName,
+            isDesktop ? 19 : 15,
+            FontWeight.w600,
+            4,
+          ),
           const SizedBox(height: 12),
           _bannerText(
             loggedIn
@@ -235,8 +266,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ElevatedButton.icon(
                   key: HomeScreen.loginKey,
                   style: buttonStyle.copyWith(
-                    backgroundColor: const WidgetStatePropertyAll(AppTheme.secondaryColor),
-                    foregroundColor: const WidgetStatePropertyAll(AppTheme.onSecondaryColor),
+                    backgroundColor: const WidgetStatePropertyAll(
+                      AppTheme.secondaryColor,
+                    ),
+                    foregroundColor: const WidgetStatePropertyAll(
+                      AppTheme.onSecondaryColor,
+                    ),
                   ),
                   onPressed: busy ? null : () => showLogin(context, auth),
                   icon: const Icon(Icons.login),
@@ -245,7 +280,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ElevatedButton.icon(
                   key: HomeScreen.thaidKey,
                   style: buttonStyle.copyWith(
-                    backgroundColor: const WidgetStatePropertyAll(Color(0xFF06115A)),
+                    backgroundColor: const WidgetStatePropertyAll(
+                      Color(0xFF06115A),
+                    ),
                     foregroundColor: const WidgetStatePropertyAll(Colors.white),
                   ),
                   onPressed: busy ? null : () => _thaid(context),
@@ -256,9 +293,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   key: HomeScreen.registerKey,
                   style: buttonStyle.copyWith(
                     backgroundColor: const WidgetStatePropertyAll(Colors.white),
-                    foregroundColor: WidgetStatePropertyAll(AppTheme.primaryColor),
+                    foregroundColor: WidgetStatePropertyAll(
+                      AppTheme.primaryColor,
+                    ),
                   ),
-                  onPressed: busy ? null : () => showRegisterThenLogin(context, auth),
+                  onPressed: busy
+                      ? null
+                      : () => showRegisterThenLogin(context, auth),
                   icon: const Icon(Icons.how_to_reg),
                   label: const Text('ลงทะเบียน', style: buttonText),
                 ),
@@ -277,7 +318,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       await widget.authProvider.loginWithThaid();
     } catch (e) {
-      final notRegistered = e is ApiException && e.code == ErrorCodes.notRegistered;
+      final notRegistered =
+          e is ApiException && e.code == ErrorCodes.notRegistered;
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -294,7 +336,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     textColor: Colors.white,
                     onPressed: () {
                       if (navigator.mounted) {
-                        showRegisterThenLogin(navigator.context, widget.authProvider);
+                        showRegisterThenLogin(
+                          navigator.context,
+                          widget.authProvider,
+                        );
                       }
                     },
                   )
@@ -316,9 +361,16 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               Util.formatCount(value),
-              style: screenText(size: 20, weight: FontWeight.w700, color: AppTheme.primaryDark),
+              style: screenText(
+                size: 20,
+                weight: FontWeight.w700,
+                color: AppTheme.primaryDark,
+              ),
             ),
-            Text(label, style: screenText(size: 12.5, color: AppTheme.textSecondary)),
+            Text(
+              label,
+              style: screenText(size: 12.5, color: AppTheme.textSecondary),
+            ),
           ],
         ),
       ],
@@ -331,7 +383,10 @@ class _HomeScreenState extends State<HomeScreen> {
       key: HomeScreen.statsKey,
       width: double.infinity,
       color: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: isDesktop ? 16 : 10, horizontal: 8),
+      padding: EdgeInsets.symmetric(
+        vertical: isDesktop ? 16 : 10,
+        horizontal: 8,
+      ),
       child: Wrap(
         alignment: WrapAlignment.center,
         runSpacing: 4,

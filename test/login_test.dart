@@ -149,25 +149,39 @@ void main() {
         'TWO_FACTOR_REJECTED',
         'หมดเวลายืนยันตัวตน กรุณาเข้าสู่ระบบใหม่',
       );
-      await tester.enterText(find.byKey(TwoFactorCodeField.fieldKey), fakeTotpCode);
+      await tester.enterText(
+        find.byKey(TwoFactorCodeField.fieldKey),
+        fakeTotpCode,
+      );
       await tester.tap(find.widgetWithText(ElevatedButton, 'ยืนยัน'));
       await tester.pumpAndSettle();
       expect(find.byKey(TwoFactorCodeField.fieldKey), findsNothing);
       expect(username, findsOneWidget);
-      expect(find.text('หมดเวลายืนยันตัวตน กรุณาเข้าสู่ระบบใหม่'), findsOneWidget);
+      expect(
+        find.text('หมดเวลายืนยันตัวตน กรุณาเข้าสู่ระบบใหม่'),
+        findsOneWidget,
+      );
     });
   });
 
-  testWidgets('ThaID: เข้าสู่ระบบสำเร็จด้วยเลขบัตรที่ลงทะเบียนแล้ว', (tester) async {
+  testWidgets('ThaID: เข้าสู่ระบบสำเร็จด้วยเลขบัตรที่ลงทะเบียนแล้ว', (
+    tester,
+  ) async {
     await open(tester);
     final thaid = installFakeThaid()..state = 'st-login';
-    backend.thaid['st-login'] = FakeThaid('login', backend.users['member1']!.idcard);
+    backend.thaid['st-login'] = FakeThaid(
+      'login',
+      backend.users['member1']!.idcard,
+    );
     await tester.tap(find.byKey(const ValueKey('thaid-login')));
     await tester.pumpAndSettle();
     expect(thaid.purposes, ['login']);
     expect(auth.isLoggedIn, isTrue);
     expect(auth.isThaidLogin, isTrue);
-    expect(backend.bodyOf('POST /api/auth/public-thaid/login')!['state'], 'st-login');
+    expect(
+      backend.bodyOf('POST /api/auth/public-thaid/login')!['state'],
+      'st-login',
+    );
   });
 
   testWidgets('ThaID: ยังไม่ลงทะเบียน (404 NOT_REGISTERED) แนะนำให้ลงทะเบียน', (
@@ -182,7 +196,9 @@ void main() {
     expect(textContaining(LoginDialog.notRegisteredHint), findsOneWidget);
   });
 
-  testWidgets('ThaID: ผู้ใช้ยกเลิก = แจ้งยกเลิก ไม่เรียกเส้น login', (tester) async {
+  testWidgets('ThaID: ผู้ใช้ยกเลิก = แจ้งยกเลิก ไม่เรียกเส้น login', (
+    tester,
+  ) async {
     await open(tester);
     installFakeThaid().state = null;
     await tester.tap(find.byKey(const ValueKey('thaid-login')));
@@ -191,21 +207,29 @@ void main() {
     expect(backend.calls, isNot(contains('POST /api/auth/public-thaid/login')));
   });
 
-  testWidgets('passkey: ส่งชื่อผู้ใช้ที่พิมพ์ไว้ไปขอ options และส่ง credential เป็นข้อความ JSON', (
+  testWidgets(
+    'passkey: ส่งชื่อผู้ใช้ที่พิมพ์ไว้ไปขอ options และส่ง credential เป็นข้อความ JSON',
+    (tester) async {
+      installFakePasskey();
+      await open(tester);
+      await tester.enterText(username, 'member1');
+      await tester.tap(find.byKey(const ValueKey('passkey-login')));
+      await tester.pumpAndSettle();
+      expect(backend.bodyOf('POST /api/public/passkey/options'), {
+        'username': 'member1',
+      });
+      expect(
+        backend.bodyOf('POST /api/public/passkey/login')!['credential'],
+        isA<String>(),
+      );
+      expect(auth.isLoggedIn, isTrue);
+      expect(auth.isPasskeyLogin, isTrue);
+    },
+  );
+
+  testWidgets('passkey: ไม่ได้พิมพ์ชื่อผู้ใช้ = ไม่ส่งช่อง username', (
     tester,
   ) async {
-    installFakePasskey();
-    await open(tester);
-    await tester.enterText(username, 'member1');
-    await tester.tap(find.byKey(const ValueKey('passkey-login')));
-    await tester.pumpAndSettle();
-    expect(backend.bodyOf('POST /api/public/passkey/options'), {'username': 'member1'});
-    expect(backend.bodyOf('POST /api/public/passkey/login')!['credential'], isA<String>());
-    expect(auth.isLoggedIn, isTrue);
-    expect(auth.isPasskeyLogin, isTrue);
-  });
-
-  testWidgets('passkey: ไม่ได้พิมพ์ชื่อผู้ใช้ = ไม่ส่งช่อง username', (tester) async {
     installFakePasskey();
     await open(tester);
     await tester.tap(find.byKey(const ValueKey('passkey-login')));
@@ -222,18 +246,19 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('บังคับเปลี่ยนรหัสผ่านเมื่อ must_change_password แล้วใช้งานต่อได้', (
-      tester,
-    ) async {
-      await openApp(tester);
-      await tester.runAsync(() => auth.login('newbie1', 'Temp@2569xx'));
-      await tester.pumpAndSettle();
-      expect(find.byType(ChangePasswordDialog), findsOneWidget);
-      // ปิดด้วยการกดนอกหน้าต่างไม่ได้
-      await tester.tapAt(const Offset(5, 500));
-      await tester.pumpAndSettle();
-      expect(find.byType(ChangePasswordDialog), findsOneWidget);
-    });
+    testWidgets(
+      'บังคับเปลี่ยนรหัสผ่านเมื่อ must_change_password แล้วใช้งานต่อได้',
+      (tester) async {
+        await openApp(tester);
+        await tester.runAsync(() => auth.login('newbie1', 'Temp@2569xx'));
+        await tester.pumpAndSettle();
+        expect(find.byType(ChangePasswordDialog), findsOneWidget);
+        // ปิดด้วยการกดนอกหน้าต่างไม่ได้
+        await tester.tapAt(const Offset(5, 500));
+        await tester.pumpAndSettle();
+        expect(find.byType(ChangePasswordDialog), findsOneWidget);
+      },
+    );
 
     testWidgets('ออกจากระบบจากเมนูผู้ใช้: กลับหน้าแรกและปิดหน้าจอที่เปิดค้าง', (
       tester,
@@ -243,7 +268,11 @@ void main() {
       await tester.pumpAndSettle();
       // เปิดหน้าจอซ้อนไว้หนึ่งหน้า
       final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
-      nav.push(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Text('หน้าซ้อน'))));
+      nav.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('หน้าซ้อน')),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('หน้าซ้อน'), findsOneWidget);
       await tester.runAsync(() => auth.logout());

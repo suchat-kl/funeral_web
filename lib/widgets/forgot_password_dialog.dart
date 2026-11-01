@@ -160,7 +160,9 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
             const SizedBox(height: 18),
             AccountActionButtons(
               key: ForgotPasswordDialog.submitKey,
-              confirmText: _busy ? 'กำลังรอผลจาก ThaID...' : 'ยืนยันตัวตนด้วย ThaID',
+              confirmText: _busy
+                  ? 'กำลังรอผลจาก ThaID...'
+                  : 'ยืนยันตัวตนด้วย ThaID',
               confirmIcon: Icons.qr_code_scanner,
               loading: _busy,
               onCancel: () => Navigator.of(context).pop(),

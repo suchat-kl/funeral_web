@@ -78,7 +78,8 @@ class StoredFile {
 
   /// ข้อความค้นหา (ตัวพิมพ์เล็ก) ใช้กรองในตาราง
   String get searchText =>
-      '$num $typeFile $title $fileName ${FileFor.nameOf(fileFor)}'.toLowerCase();
+      '$num $typeFile $title $fileName ${FileFor.nameOf(fileFor)}'
+          .toLowerCase();
 
   /// วันที่นำเข้าแบบไทย
   String get uploadedText => Util.thaiDateOf(uploadedAt);

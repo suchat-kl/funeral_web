@@ -276,7 +276,10 @@ class _ChapanaSlipScreenState extends State<ChapanaSlipScreen>
                   Expanded(flex: 3, child: SheetHead('สถานะบุคคล')),
                   Expanded(
                     flex: 3,
-                    child: SheetHead('ยอดที่ต้องการหัก', align: TextAlign.right),
+                    child: SheetHead(
+                      'ยอดที่ต้องการหัก',
+                      align: TextAlign.right,
+                    ),
                   ),
                   Expanded(
                     flex: 3,

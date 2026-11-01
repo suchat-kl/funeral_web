@@ -166,7 +166,10 @@ class _AdminImportScreenState extends State<AdminImportScreen> {
                     '${countText(r.imported)} รายการ',
                     color: AppTheme.successColor,
                   ),
-                  FactRow('มีอยู่แล้ว (ข้าม)', '${countText(r.duplicates)} รายการ'),
+                  FactRow(
+                    'มีอยู่แล้ว (ข้าม)',
+                    '${countText(r.duplicates)} รายการ',
+                  ),
                   FactRow(
                     'ไฟล์หาย',
                     '${countText(r.missingFiles.length)} รายการ',
@@ -180,7 +183,9 @@ class _AdminImportScreenState extends State<AdminImportScreen> {
                   FactRow(
                     'ไฟล์ที่ไม่มีแถวอ้างถึง',
                     '${countText(r.filesWithoutRow.length)} ไฟล์',
-                    color: r.filesWithoutRow.isEmpty ? null : AppTheme.warningColor,
+                    color: r.filesWithoutRow.isEmpty
+                        ? null
+                        : AppTheme.warningColor,
                   ),
                   _problems('ไฟล์หาย', r.missingFiles, AppTheme.dangerColor),
                   _problems('แถวผิดรูป', r.invalidRows, AppTheme.dangerColor),
@@ -213,7 +218,8 @@ class _AdminImportScreenState extends State<AdminImportScreen> {
         const ScreenHeader(
           icon: AdminImportScreen.menuIcon,
           title: AdminImportScreen.menuTitle,
-          subtitle: 'ย้ายรายการไฟล์จากระบบเดิมเข้าระบบใหม่ (รันซ้ำได้ ข้ามรายการที่มีแล้ว)',
+          subtitle:
+              'ย้ายรายการไฟล์จากระบบเดิมเข้าระบบใหม่ (รันซ้ำได้ ข้ามรายการที่มีแล้ว)',
           bullets: [
             'คัดลอกไฟล์จริงของระบบเดิมไปไว้ที่โฟลเดอร์ข้อมูลเดิมของเครื่องแม่ข่ายก่อน',
             'ระบบตรวจทุกแถวว่ามีไฟล์จริง แถวที่ไฟล์หายจะไม่ถูกนำเข้าและแสดงในรายงานผล',
@@ -222,7 +228,11 @@ class _AdminImportScreenState extends State<AdminImportScreen> {
         const SizedBox(height: 14),
         _card(StoredFile.kindGeneral, 'แบบฟอร์มทั่วไป', 'funeral_general'),
         const SizedBox(height: 12),
-        _card(StoredFile.kindMonthYear, 'ทะเบียนคุมรายชื่อ', 'funeral_monthyear'),
+        _card(
+          StoredFile.kindMonthYear,
+          'ทะเบียนคุมรายชื่อ',
+          'funeral_monthyear',
+        ),
       ],
     );
   }

@@ -52,7 +52,10 @@ class _UserAdminDialogState extends State<UserAdminDialog> {
   String? _success;
 
   List<RoleInfo> get _assignable {
-    final list = [for (final r in widget.roles) if (r.assignable) r];
+    final list = [
+      for (final r in widget.roles)
+        if (r.assignable) r,
+    ];
     // บทบาทที่ผู้ใช้ถืออยู่แต่ backend ไม่ได้ส่งมาในรายการ ยังต้องแสดงให้เอาออกได้
     for (final r in _assigned) {
       if (!list.any((x) => x.name == r)) {
@@ -154,8 +157,11 @@ class _UserAdminDialogState extends State<UserAdminDialog> {
     }
   }
 
-  TextStyle _t({double size = 14, FontWeight? w, Color? c}) =>
-      screenText(size: size, weight: w ?? FontWeight.w400, color: c ?? AppTheme.textPrimary);
+  TextStyle _t({double size = 14, FontWeight? w, Color? c}) => screenText(
+    size: size,
+    weight: w ?? FontWeight.w400,
+    color: c ?? AppTheme.textPrimary,
+  );
 
   Widget _fact(String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 2),
@@ -195,7 +201,9 @@ class _UserAdminDialogState extends State<UserAdminDialog> {
           _fact('เลขบัตรประชาชน', Util.maskIdcard(u.idcard)),
           _fact(
             'สมาชิกฌาปนกิจ',
-            u.member ? 'เป็นสมาชิก เลขที่ ${u.memberNo ?? '-'}' : 'ไม่ใช่สมาชิก',
+            u.member
+                ? 'เป็นสมาชิก เลขที่ ${u.memberNo ?? '-'}'
+                : 'ไม่ใช่สมาชิก',
           ),
           _fact('ผู้นำไฟล์เข้า', u.uploader ? 'มีสิทธิ์' : 'ไม่มี'),
           _fact(
@@ -374,7 +382,8 @@ class _NewPasswordDialogState extends State<_NewPasswordDialog> {
     return AccountDialogShell(
       icon: Icons.lock_reset,
       title: 'ตั้งรหัสผ่านใหม่',
-      subtitle: 'บัญชี ${widget.username} — ผู้ใช้ต้องเปลี่ยนรหัสผ่านเองตอนเข้าสู่ระบบครั้งถัดไป',
+      subtitle:
+          'บัญชี ${widget.username} — ผู้ใช้ต้องเปลี่ยนรหัสผ่านเองตอนเข้าสู่ระบบครั้งถัดไป',
       onClose: () => Navigator.of(context).pop(),
       child: Form(
         key: _formKey,

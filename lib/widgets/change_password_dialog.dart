@@ -232,7 +232,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 Text(
                   'เปลี่ยนรหัสผ่าน',
                   style: TextStyle(
- fontFamily: kAccountFont,
+                    fontFamily: kAccountFont,
                     fontSize: isDesktop ? 18 : 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -243,7 +243,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                       ? 'ผู้ดูแลระบบตั้งรหัสผ่านให้ กรุณาเปลี่ยนรหัสผ่านก่อนใช้งาน'
                       : 'กรุณากรอกรหัสผ่านให้ตรงตามเงื่อนไข',
                   style: TextStyle(
- fontFamily: kAccountFont,
+                    fontFamily: kAccountFont,
                     fontSize: isDesktop ? 12 : 11,
                     color: Colors.white70,
                   ),
@@ -272,7 +272,10 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             child: Text(
               _errorMessage!,
               style: TextStyle(
- fontFamily: kAccountFont,color: Colors.red.shade700, fontSize: 13),
+                fontFamily: kAccountFont,
+                color: Colors.red.shade700,
+                fontSize: 13,
+              ),
             ),
           ),
           InkWell(
@@ -291,7 +294,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         Text(
           'ชื่อผู้ใช้',
           style: TextStyle(
- fontFamily: kAccountFont,
+            fontFamily: kAccountFont,
             fontSize: isDesktop ? 14 : 13,
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimary,
@@ -316,7 +319,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             ),
           ),
           style: TextStyle(
- fontFamily: kAccountFont,
+            fontFamily: kAccountFont,
             fontSize: isDesktop ? 16 : 14,
             color: Colors.grey.shade700,
           ),
@@ -332,7 +335,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         Text(
           'รหัสผ่านเดิม',
           style: TextStyle(
- fontFamily: kAccountFont,
+            fontFamily: kAccountFont,
             fontSize: isDesktop ? 14 : 13,
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimary,
@@ -368,7 +371,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             fillColor: AppTheme.fieldFillColor,
           ),
           style: TextStyle(
- fontFamily: kAccountFont,fontSize: isDesktop ? 16 : 14),
+            fontFamily: kAccountFont,
+            fontSize: isDesktop ? 16 : 14,
+          ),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'กรุณากรอกรหัสผ่านเดิม';
@@ -387,7 +392,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         Text(
           'รหัสผ่านใหม่',
           style: TextStyle(
- fontFamily: kAccountFont,
+            fontFamily: kAccountFont,
             fontSize: isDesktop ? 14 : 13,
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimary,
@@ -433,7 +438,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             fillColor: AppTheme.fieldFillColor,
           ),
           style: TextStyle(
- fontFamily: kAccountFont,fontSize: isDesktop ? 16 : 14),
+            fontFamily: kAccountFont,
+            fontSize: isDesktop ? 16 : 14,
+          ),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'กรุณากรอกรหัสผ่านใหม่';
@@ -455,7 +462,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         Text(
           'ยืนยันรหัสผ่านใหม่',
           style: TextStyle(
- fontFamily: kAccountFont,
+            fontFamily: kAccountFont,
             fontSize: isDesktop ? 14 : 13,
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimary,
@@ -495,7 +502,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             fillColor: AppTheme.fieldFillColor,
           ),
           style: TextStyle(
- fontFamily: kAccountFont,fontSize: isDesktop ? 16 : 14),
+            fontFamily: kAccountFont,
+            fontSize: isDesktop ? 16 : 14,
+          ),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'กรุณายืนยันรหัสผ่านใหม่';
@@ -545,7 +554,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         child: Text(
           text,
           style: TextStyle(
- fontFamily: kAccountFont,
+            fontFamily: kAccountFont,
             fontSize: 11,
             color: color,
             fontWeight: FontWeight.bold,
@@ -569,7 +578,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
           Text(
             'เงื่อนไขการตั้งรหัสผ่าน',
             style: TextStyle(
- fontFamily: kAccountFont,
+              fontFamily: kAccountFont,
               fontSize: isDesktop ? 14 : 13,
               fontWeight: FontWeight.bold,
               color: AppTheme.primaryColor,
@@ -621,7 +630,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             child: Text(
               text,
               style: TextStyle(
- fontFamily: kAccountFont,
+                fontFamily: kAccountFont,
                 fontSize: isDesktop ? 13 : 12,
                 color: isValid ? Colors.green.shade700 : Colors.grey.shade600,
                 decoration: isValid ? TextDecoration.none : TextDecoration.none,
@@ -654,7 +663,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               child: Text(
                 widget.forced ? 'ออกจากระบบ' : 'ยกเลิก',
                 style: TextStyle(
- fontFamily: kAccountFont,fontSize: isDesktop ? 16 : 14),
+                  fontFamily: kAccountFont,
+                  fontSize: isDesktop ? 16 : 14,
+                ),
               ),
             ),
           ),

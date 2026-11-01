@@ -122,8 +122,9 @@ class _UploadFileDialogState extends State<UploadFileDialog> {
               icon: Icons.title,
               controller: _title,
               enabled: !_busy,
-              validator: (v) =>
-                  (v ?? '').trim().isEmpty ? 'กรุณากรอกชื่อไฟล์ดาวน์โหลด' : null,
+              validator: (v) => (v ?? '').trim().isEmpty
+                  ? 'กรุณากรอกชื่อไฟล์ดาวน์โหลด'
+                  : null,
             ),
             const SizedBox(height: 12),
             Text('แบบฟอร์มสำหรับ', style: screenText(weight: FontWeight.w600)),

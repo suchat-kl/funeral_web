@@ -232,7 +232,10 @@ class _ReceiptPeriodScreenState extends State<ReceiptPeriodScreen>
                         key: ReceiptPeriodScreen.selectAllKey,
                         onPressed: busy ? null : _selectAll,
                         icon: const Icon(Icons.done_all, size: 18),
-                        label: Text('เลือกทั้งหมด', style: screenText(size: 14)),
+                        label: Text(
+                          'เลือกทั้งหมด',
+                          style: screenText(size: 14),
+                        ),
                       ),
                       TextButton.icon(
                         key: ReceiptPeriodScreen.clearKey,

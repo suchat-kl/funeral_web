@@ -164,7 +164,8 @@ class Util {
   }
 
   /// ปี พ.ศ. ปัจจุบัน
-  static int currentBuddhistYear([DateTime? now]) => (now ?? DateTime.now()).year + 543;
+  static int currentBuddhistYear([DateTime? now]) =>
+      (now ?? DateTime.now()).year + 543;
 
   /// "ปี พ.ศ.-เดือน 2 หลัก" ที่ backend ใช้ เช่น (2569, 10) -> "2569-10"
   static String yearMonth(int buddhistYear, int month) =>
@@ -172,7 +173,9 @@ class Util {
 
   /// ชื่อเดือนเต็ม + ปี พ.ศ. จาก "2569-10" -> "ตุลาคม 2569" ผิดรูป = ค่าเดิม
   static String yearMonthName(String? yearMonth) {
-    final m = RegExp(r'^(\d{4})-(\d{1,2})$').firstMatch((yearMonth ?? '').trim());
+    final m = RegExp(
+      r'^(\d{4})-(\d{1,2})$',
+    ).firstMatch((yearMonth ?? '').trim());
     if (m == null) return yearMonth ?? '-';
     final month = int.parse(m.group(2)!);
     if (month < 1 || month > 12) return yearMonth!;

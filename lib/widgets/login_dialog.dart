@@ -263,7 +263,9 @@ class _LoginDialogState extends State<LoginDialog> {
               child: Text(
                 'ยินดีต้อนรับ คุณ${widget.authProvider.displayName}',
                 style: const TextStyle(
- fontFamily: kAccountFont,color: Colors.white),
+                  fontFamily: kAccountFont,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -335,8 +337,13 @@ class _LoginDialogState extends State<LoginDialog> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: Text('ยกเลิก', style: TextStyle(
- fontFamily: kAccountFont,fontSize: isDesktop ? 16 : 14)),
+        child: Text(
+          'ยกเลิก',
+          style: TextStyle(
+            fontFamily: kAccountFont,
+            fontSize: isDesktop ? 16 : 14,
+          ),
+        ),
       ),
     );
   }
@@ -522,7 +529,7 @@ class _LoginDialogState extends State<LoginDialog> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
- fontFamily: kAccountFont,
+                            fontFamily: kAccountFont,
                             fontSize: isDesktop ? 20 : 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -534,7 +541,7 @@ class _LoginDialogState extends State<LoginDialog> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
- fontFamily: kAccountFont,
+                            fontFamily: kAccountFont,
                             fontSize: isDesktop ? 13 : 12,
                             color: Colors.white70,
                           ),
@@ -579,7 +586,7 @@ class _LoginDialogState extends State<LoginDialog> {
                                 child: Text(
                                   _errorMessage!,
                                   style: TextStyle(
- fontFamily: kAccountFont,
+                                    fontFamily: kAccountFont,
                                     color: Colors.red.shade700,
                                     fontSize: 13,
                                   ),
@@ -618,7 +625,9 @@ class _LoginDialogState extends State<LoginDialog> {
                           enabled: !_isLoading,
                           decoration: InputDecoration(
                             labelText: 'ชื่อผู้ใช้',
-                            labelStyle: const TextStyle(fontFamily: kAccountFont),
+                            labelStyle: const TextStyle(
+                              fontFamily: kAccountFont,
+                            ),
                             hintText: 'กรอกชื่อผู้ใช้',
                             prefixIcon: const Icon(Icons.person_outline),
                             border: OutlineInputBorder(
@@ -641,7 +650,9 @@ class _LoginDialogState extends State<LoginDialog> {
                             fillColor: AppTheme.fieldFillColor,
                           ),
                           style: const TextStyle(
- fontFamily: kAccountFont,fontSize: 16),
+                            fontFamily: kAccountFont,
+                            fontSize: 16,
+                          ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'กรุณากรอกชื่อผู้ใช้';
@@ -659,7 +670,9 @@ class _LoginDialogState extends State<LoginDialog> {
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'รหัสผ่าน',
-                            labelStyle: const TextStyle(fontFamily: kAccountFont),
+                            labelStyle: const TextStyle(
+                              fontFamily: kAccountFont,
+                            ),
                             hintText: 'กรอกรหัสผ่าน',
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
@@ -694,7 +707,9 @@ class _LoginDialogState extends State<LoginDialog> {
                             fillColor: AppTheme.fieldFillColor,
                           ),
                           style: const TextStyle(
- fontFamily: kAccountFont,fontSize: 16),
+                            fontFamily: kAccountFont,
+                            fontSize: 16,
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'กรุณากรอกรหัสผ่าน';
@@ -778,7 +793,7 @@ class _LoginDialogState extends State<LoginDialog> {
                                       Text(
                                         'เข้าสู่ระบบ',
                                         style: TextStyle(
- fontFamily: kAccountFont,
+                                          fontFamily: kAccountFont,
                                           fontSize: isDesktop ? 16 : 14,
                                           fontWeight: FontWeight.bold,
                                         ),
