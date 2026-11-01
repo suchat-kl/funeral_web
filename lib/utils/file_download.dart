@@ -84,3 +84,13 @@ class _BrowserFile implements SavedFile {
     html.Url.revokeObjectUrl(_url);
   }
 }
+
+/// เปิด URL ในแท็บใหม่ (เอกสาร PDF สาธารณะบนหน้าแรก) — เทสต์ตั้ง [open] เป็นตัวจำลองแล้วตั้งคืนตอนจบ
+/// เรียกจากการกดปุ่มโดยตรง (ไม่มี await ก่อนหน้า) ตัวบล็อก popup จึงไม่กัน
+class LinkOpener {
+  static void Function(String url) open = _browserOpen;
+
+  static void _browserOpen(String url) => html.window.open(url, '_blank');
+
+  static void reset() => open = _browserOpen;
+}

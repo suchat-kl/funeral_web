@@ -88,17 +88,18 @@ class RegisterDialog extends StatefulWidget {
   static const String alreadyHint =
       'ถ้าจำรหัสผ่านไม่ได้ ใช้ "ลืมรหัสผ่าน" แล้วยืนยันตัวตนด้วย ThaID เพื่อตั้งรหัสผ่านใหม่';
 
-  /// กติกาชื่อผู้ใช้ (ตรงกับ backend)
-  static const String usernameRule =
-      'ตัวอักษรภาษาอังกฤษ ตัวเลข จุด ขีดล่าง หรือขีดกลาง ยาว 4-30 ตัว และต้องไม่ใช่เลข 13 หลัก';
+  /// กติกาชื่อผู้ใช้ (ตรงกับ backend): ตรวจแค่ความยาว 4-30 ตัว
+  static const String usernameRule = 'ยาว 4-30 ตัวอักษร';
 
   /// ตรวจชื่อผู้ใช้แบบเดียวกับ backend ผ่าน = null
+  /// นับตามตัวอักษรจริง (rune) และกันอักขระควบคุม (ขึ้นบรรทัดใหม่ แท็บ) ที่มองไม่เห็น
   static String? validateUsername(String? value) {
     final v = (value ?? '').trim();
     if (v.isEmpty) return 'กรุณากรอกชื่อผู้ใช้';
-    if (!RegExp(r'^[A-Za-z0-9._-]{4,30}$').hasMatch(v)) return usernameRule;
-    if (RegExp(r'^\d{13}$').hasMatch(v)) {
-      return 'ชื่อผู้ใช้ต้องไม่ใช่เลข 13 หลัก (ป้องกันการใช้เลขบัตรประชาชน)';
+    final len = v.runes.length;
+    if (len < 4 || len > 30) return 'ชื่อผู้ใช้ต้อง$usernameRule';
+    if (RegExp(r'[\x00-\x1F\x7F-\x9F]').hasMatch(v)) {
+      return 'ชื่อผู้ใช้มีอักขระที่ใช้ไม่ได้';
     }
     return null;
   }

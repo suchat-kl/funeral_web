@@ -14,6 +14,7 @@ import '../screens/general_files_screen.dart';
 import '../screens/monthyear_files_screen.dart';
 import '../screens/receipt_period_screen.dart';
 import '../screens/upload_files_screen.dart';
+import '../screens/upload_home_documents_screen.dart';
 import '../services/api_service.dart';
 import '../utils/passkey.dart';
 import '../utils/roles.dart';
@@ -135,6 +136,13 @@ List<AppMenuGroup> buildAppMenu() {
             apiService: api(),
             kind: StoredFile.kindMonthYear,
           ),
+        ),
+        AppMenuItem(
+          id: 'upload-home-documents',
+          title: UploadHomeDocumentsScreen.menuTitle,
+          icon: UploadHomeDocumentsScreen.menuIcon,
+          visible: (a) => a.upload,
+          screen: () => UploadHomeDocumentsScreen(apiService: api()),
         ),
       ],
     ),

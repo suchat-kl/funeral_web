@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/app_config.dart';
 import '../config/theme.dart';
+import '../models/home_document.dart';
 import '../models/stats.dart';
 import '../models/stored_file.dart';
 import '../providers/auth_provider.dart';
@@ -31,6 +32,8 @@ class HomeScreen extends StatefulWidget {
   static const Key loginKey = ValueKey('home-login');
   static const Key thaidKey = ValueKey('home-thaid');
   static const Key registerKey = ValueKey('home-register');
+  static const Key documentsKey = ValueKey('home-documents');
+  static Key documentKey(String slot) => ValueKey('home-document-$slot');
 
   /// ภาพพื้นหลังแถบหัว (อาคารกรมทางหลวง)
   static const String bannerImage = 'assets/images/doh.jpg';
@@ -42,6 +45,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final ApiService _api = widget.apiService ?? ApiService();
   PublicStats? _stats;
+  List<HomeDocument> _documents = const [];
   List<StoredFile>? _forms;
   String? _formsError;
   String? _downloading;
@@ -71,6 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     _loadStats();
+    _loadDocuments();
     try {
       final forms = await _api.getGeneralFiles();
       if (!mounted) return;
@@ -92,6 +97,71 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       if (mounted) setState(() => _stats = null);
     }
+  }
+
+  /// เอกสารหน้าแรก โหลดไม่ได้ = ซ่อนปุ่ม (ไม่แสดงข้อผิดพลาด)
+  Future<void> _loadDocuments() async {
+    try {
+      final docs = await _api.getHomeDocuments();
+      if (mounted) setState(() => _documents = docs);
+    } catch (_) {
+      if (mounted) setState(() => _documents = const []);
+    }
+  }
+
+  /// ปุ่ม PDF บนหน้าแรก (เฉพาะช่องที่มีไฟล์) เปิดในแท็บใหม่แบบระบบเดิม
+  Widget _documentsBar(bool isDesktop) {
+    final docs = [
+      for (final d in _documents)
+        if (d.available) d,
+    ];
+    if (docs.isEmpty) return const SizedBox.shrink();
+    return Container(
+      key: HomeScreen.documentsKey,
+      width: double.infinity,
+      color: AppTheme.backgroundColor,
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 32 : 12,
+        isDesktop ? 24 : 16,
+        isDesktop ? 32 : 12,
+        0,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 10,
+            children: [
+              for (final d in docs)
+                OutlinedButton.icon(
+                  key: HomeScreen.documentKey(d.slot),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppTheme.primaryDark,
+                    side: BorderSide(color: AppTheme.primaryColor),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => LinkOpener.open(d.fileUrl),
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  label: Text(
+                    d.title,
+                    textAlign: TextAlign.center,
+                    style: screenText(size: 15, weight: FontWeight.w600),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _download(StoredFile f) async {
@@ -122,6 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _banner(context, isDesktop),
           if (_stats != null) _statsBar(isDesktop),
+          _documentsBar(isDesktop),
           // ── ที่ว่างไว้สำหรับการ์ด "ยอดเงินฝากล่วงหน้า" ของสมาชิก (ส่วนเพิ่มในอนาคต: ฝากเงินฌาปนกิจล่วงหน้า)
           // ยังไม่มีเส้น API — ห้ามใส่ข้อมูลสมมุติ เมื่อ backend มีเส้นแล้วให้แสดงการ์ดตรงนี้เฉพาะ
           // `widget.authProvider.isMember` (ยอดของตัวเองเท่านั้น เลขสมาชิกจากบัญชี)

@@ -348,6 +348,25 @@ class FakeBackend implements HttpClientAdapter {
     },
   ];
 
+  /// เอกสารหน้าแรกสองช่อง (INVITE ยังไม่มีไฟล์, REGULATION มีไฟล์)
+  List<Map<String, dynamic>> homeDocuments = [
+    {
+      'slot': 'INVITE',
+      'title':
+          'ประชาสัมพันธ์และเชิญชวนสมัครเป็นสมาชิกการฌาปนกิจสงเคราะห์กรมทางหลวง',
+      'available': false,
+    },
+    {
+      'slot': 'REGULATION',
+      'title': 'ข้อบังคับ ฌ.ส.ทล',
+      'available': true,
+      'fileName': 'rule.pdf',
+      'size': 5632476,
+      'uploadedBy': 'admin1',
+      'uploadedAt': '2026-11-01T09:00:00',
+    },
+  ];
+
   List<Map<String, dynamic>> signatures = [
     {
       'id': 's1',
@@ -707,6 +726,9 @@ class FakeBackend implements HttpClientAdapter {
 
     // ───────── สาธารณะ: สถิติ แบบฟอร์ม ─────────
     if (call == 'GET /api/public/stats') return _json(200, stats);
+    if (call == 'GET /api/public/home-documents') {
+      return _json(200, homeDocuments);
+    }
     if (call == 'GET /api/public/general-files') {
       final pt = user?.personType;
       final staff = has('UPLOADER') || has('ADMIN');
@@ -752,6 +774,31 @@ class FakeBackend implements HttpClientAdapter {
     }
 
     // ───────── นำไฟล์เข้า ─────────
+    final hd = RegExp(
+      r'^/api/upload/home-documents/([A-Z]+)$',
+    ).firstMatch(path);
+    if (hd != null) {
+      if (!has('UPLOADER') && !has('ADMIN')) return forbidden();
+      final d = homeDocuments.firstWhere((x) => x['slot'] == hd.group(1));
+      if (method == 'DELETE') {
+        d
+          ..['available'] = false
+          ..remove('fileName');
+        return _json(200, {
+          'message': 'เอาเอกสารออกจากหน้าแรกเรียบร้อย',
+          'success': true,
+        });
+      }
+      d['title'] = body?['title'];
+      if (body?['file'] != null) {
+        d
+          ..['available'] = true
+          ..['fileName'] = body!['file']
+          ..['size'] = body['fileSize']
+          ..['uploadedBy'] = me;
+      }
+      return _json(200, d);
+    }
     final up = RegExp(
       r'^/api/upload/(general|monthyear)-files(?:/([^/]+))?$',
     ).firstMatch(path);
