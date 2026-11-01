@@ -150,58 +150,63 @@ class _AdminImportScreenState extends State<AdminImportScreen> {
           ],
           if (r != null) ...[
             const SizedBox(height: 12),
-            Container(
+            // Material (ไม่ใช่ Container มีสีพื้น) ให้ ExpansionTile วาดคลื่นตอนกดได้
+            Material(
               key: AdminImportScreen.resultKey(kind),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.backgroundColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  FactRow('แถวในไฟล์', '${countText(r.rows)} แถว'),
-                  FactRow(
-                    'นำเข้าใหม่',
-                    '${countText(r.imported)} รายการ',
-                    color: AppTheme.successColor,
-                  ),
-                  FactRow(
-                    'มีอยู่แล้ว (ข้าม)',
-                    '${countText(r.duplicates)} รายการ',
-                  ),
-                  FactRow(
-                    'ไฟล์หาย',
-                    '${countText(r.missingFiles.length)} รายการ',
-                    color: r.missingFiles.isEmpty ? null : AppTheme.dangerColor,
-                  ),
-                  FactRow(
-                    'แถวผิดรูป',
-                    '${countText(r.invalidRows.length)} แถว',
-                    color: r.invalidRows.isEmpty ? null : AppTheme.dangerColor,
-                  ),
-                  FactRow(
-                    'ไฟล์ที่ไม่มีแถวอ้างถึง',
-                    '${countText(r.filesWithoutRow.length)} ไฟล์',
-                    color: r.filesWithoutRow.isEmpty
-                        ? null
-                        : AppTheme.warningColor,
-                  ),
-                  _problems('ไฟล์หาย', r.missingFiles, AppTheme.dangerColor),
-                  _problems('แถวผิดรูป', r.invalidRows, AppTheme.dangerColor),
-                  _problems(
-                    'ไฟล์ที่ไม่มีแถวอ้างถึง',
-                    r.filesWithoutRow,
-                    AppTheme.warningColor,
-                  ),
-                  if (!r.hasProblems) ...[
-                    const SizedBox(height: 8),
-                    const NoticeBar(
-                      type: NoticeType.success,
-                      text: 'นำเข้าครบ ไม่มีรายการที่ต้องตรวจ',
+              color: AppTheme.backgroundColor,
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FactRow('แถวในไฟล์', '${countText(r.rows)} แถว'),
+                    FactRow(
+                      'นำเข้าใหม่',
+                      '${countText(r.imported)} รายการ',
+                      color: AppTheme.successColor,
                     ),
+                    FactRow(
+                      'มีอยู่แล้ว (ข้าม)',
+                      '${countText(r.duplicates)} รายการ',
+                    ),
+                    FactRow(
+                      'ไฟล์หาย',
+                      '${countText(r.missingFiles.length)} รายการ',
+                      color: r.missingFiles.isEmpty
+                          ? null
+                          : AppTheme.dangerColor,
+                    ),
+                    FactRow(
+                      'แถวผิดรูป',
+                      '${countText(r.invalidRows.length)} แถว',
+                      color: r.invalidRows.isEmpty
+                          ? null
+                          : AppTheme.dangerColor,
+                    ),
+                    FactRow(
+                      'ไฟล์ที่ไม่มีแถวอ้างถึง',
+                      '${countText(r.filesWithoutRow.length)} ไฟล์',
+                      color: r.filesWithoutRow.isEmpty
+                          ? null
+                          : AppTheme.warningColor,
+                    ),
+                    _problems('ไฟล์หาย', r.missingFiles, AppTheme.dangerColor),
+                    _problems('แถวผิดรูป', r.invalidRows, AppTheme.dangerColor),
+                    _problems(
+                      'ไฟล์ที่ไม่มีแถวอ้างถึง',
+                      r.filesWithoutRow,
+                      AppTheme.warningColor,
+                    ),
+                    if (!r.hasProblems) ...[
+                      const SizedBox(height: 8),
+                      const NoticeBar(
+                        type: NoticeType.success,
+                        text: 'นำเข้าครบ ไม่มีรายการที่ต้องตรวจ',
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ],

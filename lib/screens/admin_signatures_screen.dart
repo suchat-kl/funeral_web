@@ -142,6 +142,8 @@ class _AdminSignaturesScreenState extends State<AdminSignaturesScreen> {
         fileName: image.name,
       );
       if (!mounted) return;
+      _name.clear();
+      _position.clear();
       setState(() {
         _saving = false;
         _image = null;

@@ -203,85 +203,91 @@ class AccountDialogShell extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: isDesktop ? 24 : 16,
-                vertical: isDesktop ? 16 : 12,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppTheme.primaryColor,
-                    AppTheme.primaryColor.withValues(alpha: 0.8),
+        // พื้นขาวของหน้าต่างเป็น Material ให้ ListTile (ช่องติ๊ก/สวิตช์) วาดสีและคลื่นตอนกดได้
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 24 : 16,
+                  vertical: isDesktop ? 16 : 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.primaryColor,
+                      AppTheme.primaryColor.withValues(alpha: 0.8),
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: isDesktop ? 45 : 38,
+                      height: isDesktop ? 45 : 38,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: AppTheme.primaryColor,
+                        size: isDesktop ? 24 : 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontFamily: kAccountFont,
+                              fontSize: isDesktop ? 18 : 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontFamily: kAccountFont,
+                              fontSize: isDesktop ? 12 : 11,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (onClose != null)
+                      IconButton(
+                        tooltip: 'ปิด',
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: onClose,
+                      ),
                   ],
                 ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(isDesktop ? 28 : 20),
+                  child: child,
                 ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: isDesktop ? 45 : 38,
-                    height: isDesktop ? 45 : 38,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: AppTheme.primaryColor,
-                      size: isDesktop ? 24 : 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontFamily: kAccountFont,
-                            fontSize: isDesktop ? 18 : 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontFamily: kAccountFont,
-                            fontSize: isDesktop ? 12 : 11,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (onClose != null)
-                    IconButton(
-                      tooltip: 'ปิด',
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: onClose,
-                    ),
-                ],
-              ),
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(isDesktop ? 28 : 20),
-                child: child,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
