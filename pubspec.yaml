@@ -1,0 +1,63 @@
+name: funeral_web
+description: ระบบดาวน์โหลดไฟล์และใบเสร็จฌาปนกิจ กรมทางหลวง - Flutter Web App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  dio: ^5.4.0
+  flutter_secure_storage: ^10.3.1
+  universal_html: ^2.3.0
+  # เรียก WebAuthn (navigator.credentials) ของเบราว์เซอร์ — lib/utils/passkey_web.dart
+  web: ^1.1.1
+  # สร้างรูป QR ของการตั้งค่า 2FA ในเครื่อง (pure Dart) — ห้ามส่ง otpauth_uri ไปบริการภายนอก
+  qr: ^3.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Sarabun
+      fonts:
+        - asset: assets/fonts/Sarabun-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Sarabun-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Sarabun-Bold.ttf
+          weight: 700
+
+    - family: NotoSansThai
+      fonts:
+        - asset: assets/fonts/NotoSansThai-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansThai-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSansThai-Bold.ttf
+          weight: 700
+
+    - family: Kanit
+      fonts:
+        - asset: assets/fonts/Kanit-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Kanit-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Kanit-Bold.ttf
+          weight: 700
+
+  assets:
+    # โลโก้ปุ่มเข้าสู่ระบบด้วย ThaID (แถบบน)
+    - assets/images/thaid.png
+    # ภาพพื้นหลังแถบหัวหน้าแรก (อาคารกรมทางหลวง) — ใช้ไฟล์ .jpg ที่ย่อขนาดแล้ว
+    - assets/images/doh.jpg

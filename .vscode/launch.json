@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  // พอร์ต 5575/5576 ไม่ชนกับ HTC (5555/5556) และสลิปภาษี (5565/5566) รันพร้อมกันได้
+  // --web-port คงที่ ทำให้ origin ไม่เปลี่ยนทุกครั้งที่รันใหม่
+  // flutter_secure_storage บนเว็บผูก token กับ origin จึงไม่ต้องล็อกอินใหม่
+  "configurations": [
+    {
+      "name": "funeral dev (WSL API)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--web-port=5575",
+        "--dart-define=API_BASE=https://suchat-dev.doh.go.th/funeralapi"
+      ]
+    },
+    {
+      "name": "funeral dev (production API - ข้อมูลจริง)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": ["--web-port=5576"]
+    }
+  ]
+}
