@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../config/app_config.dart';
+import '../models/home_document.dart';
 import '../models/import_result.dart';
 import '../models/passkey.dart';
 import '../models/receipt.dart';
@@ -728,6 +729,60 @@ class ApiService {
       return PublicStats.fromJson(Map<String, dynamic>.from(r.data));
     }
     throw _apiError(r.statusCode, r.data, 'โหลดสถิติไม่สำเร็จ');
+  }
+
+  /// เอกสาร PDF สองช่องบนหน้าแรก (ทุกคน)
+  Future<List<HomeDocument>> getHomeDocuments() async {
+    final r = await _publicRequest('GET', '/api/public/home-documents');
+    if (r.statusCode == 200 && r.data is List) {
+      return [
+        for (final m in r.data as List)
+          if (m is Map) HomeDocument.fromJson(Map<String, dynamic>.from(m)),
+      ];
+    }
+    throw _apiError(r.statusCode, r.data, 'โหลดเอกสารหน้าแรกไม่สำเร็จ');
+  }
+
+  /// บันทึกเอกสารหน้าแรก (ผู้นำไฟล์เข้า/ผู้ดูแล): [bytes] null = แก้แค่ข้อความบนปุ่ม
+  Future<HomeDocument> saveHomeDocument(
+    String slot, {
+    required String title,
+    Uint8List? bytes,
+    String? fileName,
+  }) async {
+    final r = await _multipart('/api/upload/home-documents/$slot', () {
+      final form = FormData();
+      form.fields.add(MapEntry('title', title.trim()));
+      if (bytes != null) {
+        form.files.add(
+          MapEntry(
+            'file',
+            MultipartFile.fromBytes(
+              bytes,
+              filename: fileName ?? 'document.pdf',
+              contentType: DioMediaType.parse('application/pdf'),
+            ),
+          ),
+        );
+      }
+      return form;
+    }, timeout: const Duration(minutes: 5));
+    if (r.statusCode == 200 && r.data is Map) {
+      return HomeDocument.fromJson(Map<String, dynamic>.from(r.data));
+    }
+    throw _apiError(r.statusCode, r.data, 'บันทึกเอกสารหน้าแรกไม่สำเร็จ');
+  }
+
+  /// เอาไฟล์ออก (ปุ่มหายจากหน้าแรก)
+  Future<String> removeHomeDocument(String slot) async {
+    final r = await _authedRequest(
+      'DELETE',
+      '/api/upload/home-documents/$slot',
+    );
+    if (r.statusCode == 200) {
+      return _messageFrom(r.data) ?? 'เอาเอกสารออกจากหน้าแรกเรียบร้อย';
+    }
+    throw _apiError(r.statusCode, r.data, 'เอาเอกสารออกไม่สำเร็จ');
   }
 
   /// แบบฟอร์มทั่วไป — เข้าสู่ระบบอยู่แนบ token (backend กรองตามประเภทบุคลากร) ไม่เข้าสู่ระบบ = เฉพาะ "ทั้งหมด"

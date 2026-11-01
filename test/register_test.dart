@@ -311,11 +311,15 @@ void main() {
   });
 
   test('กติกาชื่อผู้ใช้ตรงกับ backend', () {
+    // ตรวจแค่ความยาว 4-30 ตัว (ผู้ใช้ตัดสิน 1 พ.ย. 2569)
     expect(RegisterDialog.validateUsername('abc'), isNotNull);
-    expect(RegisterDialog.validateUsername('a b c d'), isNotNull);
-    expect(RegisterDialog.validateUsername('ชื่อไทย'), isNotNull);
-    expect(RegisterDialog.validateUsername('1234567890123'), isNotNull);
-    expect(RegisterDialog.validateUsername('somchai.j_01-x'), isNull);
     expect(RegisterDialog.validateUsername('a' * 31), isNotNull);
+    expect(RegisterDialog.validateUsername('   '), isNotNull);
+    expect(RegisterDialog.validateUsername('ab\ncd'), isNotNull);
+    expect(RegisterDialog.validateUsername('a b c d'), isNull);
+    expect(RegisterDialog.validateUsername('ชื่อไทย'), isNull);
+    expect(RegisterDialog.validateUsername('1234567890123'), isNull);
+    expect(RegisterDialog.validateUsername('somchai.j_01-x'), isNull);
+    expect(RegisterDialog.validateUsername('ก' * 30), isNull);
   });
 }
