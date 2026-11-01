@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ยืนยันตัวตนด้วย ThaID — ระบบฌาปนกิจ</title>
+  <style>
+    body { font-family: "Sarabun", "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif; padding: 24px; color: #1b2430; }
+    .ok { color: #2e7d32; } .err { color: #c62828; }
+  </style>
+</head>
+<body>
+  <!--
+    หน้าปลายทางหลังยืนยันตัวตนด้วย ThaID ของระบบดาวน์โหลดไฟล์และใบเสร็จฌาปนกิจ
+    backend พาผู้ใช้มาที่นี่พร้อม #state=... (และ &error=... หรือ &cancelled=1) ไม่มีเลขบัตรใน URL
+    หน้านี้ส่ง state กลับไปให้หน้าเว็บที่เปิดหน้าต่างนี้ (window.opener) แล้วปิดตัวเอง
+    หน้าเว็บนั้นเทียบ state กับค่าที่ส่งไปตอนเริ่ม ต้องตรงกันจึงจะขอผล (state ใช้ได้ครั้งเดียว)
+    มือถือ: แอป ThaID เปิดหน้านี้ในแท็บใหม่ที่ไม่มี window.opener — หน้าเว็บแท็บเดิมถามสถานะจาก backend เอง
+    และหน้านี้ส่งผลทาง BroadcastChannel 'funeral_thaid' (ถึงเฉพาะแท็บของเว็บเดียวกัน ชื่อต้องตรงกับ
+    AppConfig.thaidChannelName) ให้แท็บเดิมรู้ผลทันที — แยกชื่อจากสลิปภาษี ('sliptax_thaid') ที่อยู่โดเมนเดียวกัน
+    ส่งเฉพาะ origin เดียวกันเท่านั้น ข้อความจึงไม่หลุดไปเว็บอื่น
+  -->
+  <p id="msg">กำลังส่งผลยืนยันตัวตนกลับไปที่หน้าเว็บ...</p>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.hash.substring(1));
+      var state = params.get('state');
+      var error = params.get('error');
+      // ผู้ใช้กดยกเลิกในแอป ThaID backend ส่ง cancelled=1 มาแทน error
+      var cancelled = params.get('cancelled') === '1';
+      history.replaceState(null, '', location.pathname);
+      var msg = document.getElementById('msg');
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'thaid', state: state, error: error, cancelled: cancelled }, location.origin);
+        msg.textContent = cancelled ? 'ผู้ใช้งานยกเลิกการใช้ ThaID'
+          : error ? error : 'ยืนยันตัวตนเรียบร้อย ปิดหน้าต่างนี้ได้';
+        msg.className = error ? 'err' : 'ok';
+        setTimeout(function () { window.close(); }, error ? 3000 : 500);
+      } else {
+        // ไม่มีหน้าต่างต้นทาง: มือถือที่แอป ThaID เปิดหน้านี้ในแท็บใหม่
+        // หน้าเว็บแท็บเดิมถามสถานะจาก backend เอง (GET /api/auth/public-thaid/status) ผู้ใช้แค่สลับกลับไป
+        try {
+          var channel = new BroadcastChannel('funeral_thaid');
+          channel.postMessage({ type: 'thaid', state: state, error: error, cancelled: cancelled });
+          setTimeout(function () { channel.close(); }, 1000);
+        } catch (e) { /* เบราว์เซอร์เก่า: แท็บเดิมยังถามสถานะจาก backend */ }
+        msg.textContent = cancelled
+          ? 'ผู้ใช้งานยกเลิกการใช้ ThaID กลับไปที่หน้าเว็บระบบฌาปนกิจที่เปิดค้างไว้ได้เลย'
+          : error ? error + ' (กลับไปที่หน้าเว็บระบบฌาปนกิจที่เปิดค้างไว้แล้วลองใหม่)'
+          : 'ยืนยันตัวตนเรียบร้อย กรุณากลับไปที่หน้าเว็บระบบฌาปนกิจที่เปิดค้างไว้ (แท็บเดิม) ' +
+            'ระบบจะทำรายการต่อให้เอง หน้านี้ปิดได้เลย';
+        msg.className = error ? 'err' : 'ok';
+        setTimeout(function () { try { window.close(); } catch (e) {} }, 4000);
+      }
+    })();
+  </script>
+</body>
+</html>
