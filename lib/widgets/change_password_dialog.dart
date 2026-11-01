@@ -690,12 +690,15 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                       children: [
                         const Icon(Icons.check, size: 20),
                         const SizedBox(width: 8),
-                        Text(
-                          'เปลี่ยนรหัสผ่าน',
-                          style: TextStyle(
- fontFamily: kAccountFont,
-                            fontSize: isDesktop ? 16 : 14,
-                            fontWeight: FontWeight.bold,
+                        Flexible(
+                          child: Text(
+                            'เปลี่ยนรหัสผ่าน',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: kAccountFont,
+                              fontSize: isDesktop ? 16 : 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],

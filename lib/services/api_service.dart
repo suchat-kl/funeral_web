@@ -140,19 +140,8 @@ class ApiService {
     dio = Dio(options());
 
     if (kDebugMode) {
-      // ปิด header/body ไว้: กันไม่ให้ token และข้อมูลบุคคลโผล่ใน console — อย่าเปิดแล้ว commit
-      for (final d in [publicDio, dio]) {
-        d.interceptors.add(
-          LogInterceptor(
-            request: false,
-            requestHeader: false,
-            requestBody: false,
-            responseHeader: false,
-            responseBody: false,
-            error: true,
-          ),
-        );
-      }
+      // ไม่ใช้ LogInterceptor: พิมพ์ URI ทุกคำขอ ซึ่งมี query ที่ห้าม log (เช่น state ของ ThaID)
+      // จดเฉพาะข้อผิดพลาด ตัวข้อมูลผ่าน redact()
       dio.interceptors.add(
         InterceptorsWrapper(
           onError: (e, handler) {
