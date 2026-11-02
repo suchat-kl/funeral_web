@@ -575,17 +575,15 @@ class ApiService {
   // ลงทะเบียน (ไม่ต้องเข้าสู่ระบบ)
   // ===================================================================
 
-  /// เป็นสมาชิก แบบเดิม: เลขบัตร + เลขสมาชิก + วันเกิด (ส่ง ค.ศ. yyyy-MM-dd) ได้ใบผ่าน
+  /// เป็นสมาชิก แบบเดิม: เลขบัตร + เลขสมาชิก ได้ใบผ่าน
   /// ไม่ตรง = 400 REGISTER_NOT_MATCH (ไม่บอกช่อง), เคยลงทะเบียน = ALREADY_REGISTERED, ถี่ไป = 429
   Future<RegisterTicket> registerLegacyVerify({
     required String idcard,
     required String memberNo,
-    required DateTime birthDate,
   }) async {
     final r = await _publicPost('/api/public/register/legacy-verify', {
       'idcard': idcard,
       'memberNo': memberNo,
-      'birthDate': Util.isoDate(birthDate),
     });
     return _ticketOf(r, 'ตรวจสอบข้อมูลสมาชิกไม่สำเร็จ');
   }

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:funeral_web/services/api_service.dart';
 import 'package:funeral_web/widgets/register_dialog.dart';
-import 'package:funeral_web/widgets/thai_date_picker.dart';
 
 import 'fake_backend.dart';
 import 'helpers.dart';
@@ -18,14 +17,12 @@ void main() {
   late FakeThaidAuthorizer thaid;
   RegisterResult? result;
   var closed = false;
-  final today = DateTime(2026, 11, 1);
   final memberId = fakeIdcard('200000000001'); // อยู่ในทะเบียนสมาชิก 70001
   final dpisOnlyId = fakeIdcard('200000000003'); // อยู่ใน DPIS ไม่ใช่สมาชิก
 
   Future<void> open(WidgetTester tester) async {
     useDesktopView(tester, size: const Size(1200, 1400));
     backend = await installFakeBackend();
-    backend.birthDates[memberId] = '1986-03-05';
     thaid = installFakeThaid();
     result = null;
     closed = false;
@@ -38,8 +35,7 @@ void main() {
                 onPressed: () async {
                   result = await showDialog<RegisterResult>(
                     context: ctx,
-                    builder: (_) =>
-                        RegisterDialog(apiService: ApiService(), today: today),
+                    builder: (_) => RegisterDialog(apiService: ApiService()),
                   );
                   closed = true;
                 },
@@ -65,19 +61,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> pickBirthDate(WidgetTester tester) async {
-    await tester.tap(field(RegisterDialog.birthDateKey));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(ThaiDatePickerDialog.yearKey(2529)));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(ThaiDatePickerDialog.monthKey(3)));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(ThaiDatePickerDialog.dayKey(5)));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(ThaiDatePickerDialog.okKey));
-    await tester.pumpAndSettle();
-  }
-
   Future<void> fillLegacy(
     WidgetTester tester, {
     required String idcard,
@@ -87,7 +70,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(field(RegisterDialog.idcardKey), idcard);
     await tester.enterText(field(RegisterDialog.memberNoKey), memberNo);
-    await pickBirthDate(tester);
     await tapText(tester, 'ตรวจสอบ');
   }
 
@@ -120,14 +102,13 @@ void main() {
   });
 
   testWidgets(
-    'สมาชิกแบบเดิม: ส่งเลขบัตร เลขสมาชิก และวันเกิด ค.ศ. yyyy-MM-dd → ตั้งชื่อผู้ใช้ด้วยใบผ่าน',
+    'สมาชิกแบบเดิม: ส่งเฉพาะเลขบัตรกับเลขสมาชิก ไม่มีช่องวันเกิด → ตั้งชื่อผู้ใช้ด้วยใบผ่าน',
     (tester) async {
       await open(tester);
       await fillLegacy(tester, idcard: memberId);
       expect(backend.bodyOf('POST /api/public/register/legacy-verify'), {
         'idcard': memberId,
         'memberNo': '70001',
-        'birthDate': '1986-03-05',
       });
       expect(find.byKey(RegisterDialog.verifiedKey), findsOneWidget);
       expect(textContaining('เลขสมาชิก 70001'), findsOneWidget);
@@ -152,7 +133,11 @@ void main() {
       await tester.enterText(field(RegisterDialog.memberNoKey), '70001');
       await tapText(tester, 'ตรวจสอบ');
       expect(find.text('เลขบัตรประชาชนไม่ถูกต้อง'), findsOneWidget);
-      expect(find.text('กรุณาเลือกวันเกิด'), findsOneWidget);
+      expect(
+        find.text('วันเกิด'),
+        findsNothing,
+        reason: 'แบบเดิมไม่มีช่องวันเกิดแล้ว',
+      );
       expect(backend.calls, isEmpty);
     },
   );
