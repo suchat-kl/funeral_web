@@ -8,7 +8,6 @@ import '../utils/thaid.dart';
 import '../utils/util.dart';
 import 'account_form.dart';
 import 'screen_parts.dart';
-import 'thai_date_picker.dart';
 
 /// ผลของหน้าต่างลงทะเบียน: ลงทะเบียนสำเร็จ ([username]) หรือผู้ใช้เลือกไปหน้าลืมรหัสผ่าน (เลขบัตรมีบัญชีแล้ว)
 class RegisterResult {
@@ -41,26 +40,22 @@ enum MemberWay { legacy, thaid }
 /// หน้าต่างลงทะเบียน (ข้อกำหนดหัวข้อ 3) — ไม่ต้องเข้าสู่ระบบ
 ///
 /// ขั้น 1 เลือก "เป็นสมาชิก" / "ไม่เป็นสมาชิก" → ขั้น 2 ยืนยันตัวตน → ขั้น 3 ตั้งชื่อผู้ใช้ + รหัสผ่าน
-/// - เป็นสมาชิก แบบเดิม: เลขบัตร + เลขสมาชิก + วันเกิด (ปฏิทิน พ.ศ. ส่ง ค.ศ.) — ไม่ตรงไม่บอกว่าช่องไหนผิด
+/// - เป็นสมาชิก แบบเดิม: เลขบัตร + เลขสมาชิก (ไม่ใช้วันเกิด: ผู้เกษียณบางคนมีแค่ปีเกิด) — ไม่ตรงไม่บอกว่าช่องไหนผิด
 /// - เป็นสมาชิก ThaID / ไม่เป็นสมาชิก ThaID (ไม่เป็นสมาชิกมีทางเดียว)
 /// - ทุกทางได้ใบผ่าน ([RegisterTicket]) อายุสั้น ชื่อซ้ำ (409 DUPLICATE) ใช้ใบผ่านเดิมแก้ชื่อได้
 ///   ใบผ่านหมดอายุ (REGISTER_TICKET_INVALID) ต้องเริ่มใหม่ เลขบัตรมีบัญชีแล้ว (ALREADY_REGISTERED) ชวนไปลืมรหัสผ่าน
 ///
-/// ใบผ่าน ชื่อ เลขบัตร วันเกิด อยู่ใน state ของหน้าต่างนี้เท่านั้น ไม่ log ไม่เก็บลงที่เก็บของเบราว์เซอร์
+/// ใบผ่าน ชื่อ เลขบัตร อยู่ใน state ของหน้าต่างนี้เท่านั้น ไม่ log ไม่เก็บลงที่เก็บของเบราว์เซอร์
 class RegisterDialog extends StatefulWidget {
   final ApiService apiService;
 
   /// ตัวเปิด ThaID (เทสต์ส่งตัวปลอม) ไม่ส่ง = [currentThaidAuthorizer]
   final ThaidAuthorizer? thaidAuthorizer;
 
-  /// วันที่ถือเป็นวันนี้ของปฏิทินวันเกิด (เทสต์ส่งวันตายตัว)
-  final DateTime? today;
-
   const RegisterDialog({
     super.key,
     required this.apiService,
     this.thaidAuthorizer,
-    this.today,
   });
 
   static const Key memberKey = ValueKey('register-member');
@@ -69,7 +64,6 @@ class RegisterDialog extends StatefulWidget {
   static const Key thaidWayKey = ValueKey('register-way-thaid');
   static const Key idcardKey = ValueKey('register-idcard');
   static const Key memberNoKey = ValueKey('register-member-no');
-  static const Key birthDateKey = ValueKey('register-birthdate');
   static const Key verifyKey = ValueKey('register-verify');
   static const Key thaidButtonKey = ValueKey('register-thaid');
   static const Key usernameKey = ValueKey('register-username');
@@ -112,7 +106,6 @@ class _RegisterDialogState extends State<RegisterDialog> {
   final _formKey = GlobalKey<FormState>();
   final _idcard = TextEditingController();
   final _memberNo = TextEditingController();
-  final _birthDateText = TextEditingController();
   final _username = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
@@ -120,7 +113,6 @@ class _RegisterDialogState extends State<RegisterDialog> {
   RegisterStep _step = RegisterStep.choose;
   bool? _member;
   MemberWay _way = MemberWay.legacy;
-  DateTime? _birthDate;
   RegisterTicket? _ticket;
   bool _busy = false;
   String? _error;
@@ -138,14 +130,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
   @override
   void dispose() {
     _ticket = null;
-    for (final c in [
-      _idcard,
-      _memberNo,
-      _birthDateText,
-      _username,
-      _password,
-      _confirm,
-    ]) {
+    for (final c in [_idcard, _memberNo, _username, _password, _confirm]) {
       c.dispose();
     }
     super.dispose();
@@ -217,25 +202,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
     });
   }
 
-  Future<void> _pickBirthDate() async {
-    final today = widget.today ?? DateTime.now();
-    final picked = await showThaiDatePicker(
-      context,
-      _birthDate ?? DateTime(today.year - 40, 1, 1),
-      firstDate: DateTime(today.year - 100, 1, 1),
-      lastDate: today,
-      helpText: 'เลือกวันเกิด',
-      startWithYear: _birthDate == null,
-      today: today,
-    );
-    if (picked == null || !mounted) return;
-    setState(() {
-      _birthDate = picked;
-      _birthDateText.text = Util.formatThaiDate(picked);
-    });
-  }
-
-  /// เป็นสมาชิก แบบเดิม: ตรวจเลขบัตร + เลขสมาชิก + วันเกิด
+  /// เป็นสมาชิก แบบเดิม: ตรวจเลขบัตร + เลขสมาชิก
   Future<void> _verifyLegacy() async {
     if (_busy || !_formKey.currentState!.validate()) return;
     setState(() {
@@ -246,7 +213,6 @@ class _RegisterDialogState extends State<RegisterDialog> {
       final t = await widget.apiService.registerLegacyVerify(
         idcard: _idcard.text.trim(),
         memberNo: _memberNo.text.trim(),
-        birthDate: _birthDate!,
       );
       if (!mounted) return;
       _gotTicket(t);
@@ -442,7 +408,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
       key: RegisterDialog.memberKey,
       icon: Icons.card_membership,
       title: 'เป็นสมาชิกฌาปนกิจ',
-      subtitle: 'ยืนยันด้วยเลขบัตร + เลขสมาชิก + วันเกิด หรือด้วย ThaID',
+      subtitle: 'ยืนยันด้วยเลขบัตร + เลขสมาชิก หรือด้วย ThaID',
       selected: _member == true,
       onTap: () => _choose(true),
     ),
@@ -478,7 +444,7 @@ class _RegisterDialogState extends State<RegisterDialog> {
                 key: RegisterDialog.legacyWayKey,
                 icon: Icons.badge_outlined,
                 title: 'แบบเดิม',
-                subtitle: 'เลขบัตร + เลขสมาชิก + วันเกิด',
+                subtitle: 'เลขบัตร + เลขสมาชิก',
                 selected: _way == MemberWay.legacy,
                 onTap: _busy
                     ? null
@@ -549,19 +515,6 @@ class _RegisterDialogState extends State<RegisterDialog> {
         LengthLimitingTextInputFormatter(10),
       ],
       validator: (v) => (v ?? '').trim().isEmpty ? 'กรุณากรอกเลขสมาชิก' : null,
-    ),
-    const SizedBox(height: 12),
-    AccountField(
-      key: RegisterDialog.birthDateKey,
-      label: 'วันเกิด',
-      hint: 'แตะเพื่อเลือกวันเกิด (ปี พ.ศ.)',
-      icon: Icons.cake_outlined,
-      controller: _birthDateText,
-      enabled: !_busy,
-      readOnly: true,
-      onTap: _busy ? null : _pickBirthDate,
-      suffix: const Icon(Icons.calendar_month),
-      validator: (_) => _birthDate == null ? 'กรุณาเลือกวันเกิด' : null,
     ),
     const SizedBox(height: 8),
     Text(

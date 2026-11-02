@@ -670,9 +670,7 @@ class FakeBackend implements HttpClientAdapter {
         return _err(400, 'ALREADY_REGISTERED', 'เลขบัตรนี้ลงทะเบียนแล้ว');
       }
       final no = ffdMembers[idcard];
-      if (no == null ||
-          no != body?['memberNo'] ||
-          birthDates[idcard] != body?['birthDate']) {
+      if (no == null || no != body?['memberNo']) {
         return _err(400, 'REGISTER_NOT_MATCH', 'ข้อมูลไม่ตรงกับทะเบียนสมาชิก');
       }
       return _json(200, _ticket(idcard, no));
