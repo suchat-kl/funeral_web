@@ -9,7 +9,7 @@
 
 ## ที่มาของโค้ด
 
-โครงแอป (แถบบน เมนูข้าง ธีม ป้ายช่วงทดสอบ) ส่วนเข้าสู่ระบบ / refresh token / ThaID / 2FA / passkey
+โครงแอป (แถบบน เมนูข้าง ธีม) ส่วนเข้าสู่ระบบ / refresh token / ThaID / 2FA / passkey
 **ยกมาจากหน้าเว็บสลิปภาษี** (`C:\AI\flutter\sliptax` ซึ่งยกจาก HTC อีกที) เมื่อ 1 พ.ย. 2569
 ตาราง/หน้ารายงานยกแบบจากหน้าเว็บหักหนี้ (`C:\AI\flutter\dpay`: `sheet_table.dart`, `work_parts.dart`, `chapana_slip_screen.dart`)
 ส่วนที่เป็นของสลิปภาษี (กลุ่ม doh/hwp, สิทธิ์รายหน้าจอ, รายงานภาษี/สลิป ฯลฯ) ตัดออกหมดแล้ว
@@ -47,7 +47,7 @@ VS Code: Run and Debug → `funeral dev (WSL API)` (พอร์ต 5575) / `fun
 ## ผังโค้ด (`lib/`)
 
 ```
-main.dart     โครงแอป: MaterialApp + ป้ายช่วงทดสอบ + แถบบน + เมนูข้าง (ตรึงได้) + บังคับเปลี่ยนรหัสผ่าน + กลับหน้าแรกเมื่อออกจากระบบ
+main.dart     โครงแอป: MaterialApp + แถบบน + เมนูข้าง (ตรึงได้) + บังคับเปลี่ยนรหัสผ่าน + กลับหน้าแรกเมื่อออกจากระบบ
 config/       app_config.dart (ชื่อระบบ, ชื่อที่เก็บในเบราว์เซอร์), theme.dart (6 ธีม)
 models/       stored_file (ไฟล์แบบฟอร์ม/ทะเบียนคุม), register_ticket (ใบผ่านลงทะเบียน), receipt (งวดใบเสร็จ, ผลค้นสมาชิก,
               PdfPassword), user_admin (ผู้ใช้/บทบาท/หน้าของผลค้น), uploader, signature, import_result, stats,
@@ -134,7 +134,7 @@ backend ส่ง `roles[]` เป็นชื่อสั้น: `NON_MEMBER` �
 - token/session: flutter_secure_storage `WebOptions(dbName: 'FuneralEncryptedStorage', publicKey: 'FuneralSecureStorage')` ห้ามเอาออก
 - localStorage: `funeral_theme`, `funeral_menu_pinned` (ทุกคีย์ขึ้นต้น `funeral_` ดู `AppConfig`)
 
-**ป้ายช่วงทดสอบ** `TestPhaseBanner` ใน `MaterialApp.builder` ของ `main.dart` — เปิดใช้จริงแล้วให้เอาออก
+**ป้ายช่วงทดสอบ** เอาออกแล้วเมื่อเปิดใช้จริง 3 พ.ย. 2569 (ไฟล์เดิมดูได้ในประวัติ git `lib/widgets/test_phase_banner.dart`)
 
 **ฟอนต์ไทย** ระบุ `fontFamily` ชัดเสมอ (`NotoSansThai`, `Sarabun`, `Kanit` bundle มาแล้ว) — `screenText()` / `kAccountFont`
 

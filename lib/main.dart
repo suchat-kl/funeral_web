@@ -1,4 +1,4 @@
-// ระบบดาวน์โหลดไฟล์และใบเสร็จฌาปนกิจ — โครงแอป (แถบบน เมนูข้าง ธีม ป้ายช่วงทดสอบ) ยกจากระบบสลิปภาษี
+// ระบบดาวน์โหลดไฟล์และใบเสร็จฌาปนกิจ — โครงแอป (แถบบน เมนูข้าง ธีม) ยกจากระบบสลิปภาษี
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +13,6 @@ import 'services/api_service.dart';
 import 'widgets/change_password_dialog.dart';
 import 'widgets/header.dart';
 import 'widgets/sidebar_menu.dart';
-import 'widgets/test_phase_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -113,13 +112,6 @@ class _FuneralAppState extends State<FuneralApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       theme: AppTheme.lightTheme,
-      // ป้าย "ระบบงานอยู่ในช่วงทดสอบ" เหนือทุกหน้า — เปิดใช้จริงแล้วให้เอา builder นี้ออก
-      builder: (context, child) => Column(
-        children: [
-          const TestPhaseBanner(),
-          Expanded(child: child ?? const SizedBox.shrink()),
-        ],
-      ),
       home: MainNavigation(authProvider: widget.authProvider),
     );
   }
