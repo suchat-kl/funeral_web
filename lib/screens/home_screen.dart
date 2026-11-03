@@ -33,6 +33,13 @@ class HomeScreen extends StatefulWidget {
   static const Key thaidKey = ValueKey('home-thaid');
   static const Key registerKey = ValueKey('home-register');
   static const Key documentsKey = ValueKey('home-documents');
+  static const Key contactKey = ValueKey('home-contact');
+
+  /// ช่องทางสอบถามปัญหา (เบอร์ภายในกรมทางหลวง)
+  static const List<({String unit, String phone})> contacts = [
+    (unit: 'ศูนย์เทคโนโลยีสารสนเทศ กรมทางหลวง', phone: '26727, 26728'),
+    (unit: 'งานฌาปนกิจ', phone: '25142'),
+  ];
   static Key documentKey(String slot) => ValueKey('home-document-$slot');
 
   /// ภาพพื้นหลังแถบหัว (อาคารกรมทางหลวง)
@@ -198,6 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // `widget.authProvider.isMember` (ยอดของตัวเองเท่านั้น เลขสมาชิกจากบัญชี)
           const _AdvanceDepositSlot(),
           _formsSection(isDesktop),
+          _contactSection(isDesktop),
           const CustomFooter(),
         ],
       ),
@@ -482,7 +490,7 @@ class _HomeScreenState extends State<HomeScreen> {
         isDesktop ? 32 : 12,
         isDesktop ? 32 : 20,
         isDesktop ? 32 : 12,
-        isDesktop ? 40 : 24,
+        isDesktop ? 20 : 14,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -529,6 +537,71 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPressed: () => _download(f),
                       ),
                     ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// สอบถามปัญหาเพิ่มเติม: หน่วยงาน + เบอร์โทร (ต่อจากรายการแบบฟอร์ม)
+  Widget _contactSection(bool isDesktop) {
+    return Container(
+      key: HomeScreen.contactKey,
+      width: double.infinity,
+      color: AppTheme.backgroundColor,
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 32 : 12,
+        0,
+        isDesktop ? 32 : 12,
+        isDesktop ? 40 : 24,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: StepCard(
+            icon: Icons.support_agent,
+            title: 'สอบถามปัญหาเพิ่มเติม',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final c in HomeScreen.contacts)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Icon(
+                            Icons.phone_outlined,
+                            size: 20,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(text: '${c.unit} '),
+                                TextSpan(
+                                  text: 'โทร. ${c.phone}',
+                                  style: screenText(
+                                    size: 15,
+                                    weight: FontWeight.w700,
+                                    color: AppTheme.primaryDark,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            style: screenText(size: 15),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),

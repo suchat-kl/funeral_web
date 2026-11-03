@@ -63,6 +63,36 @@ void main() {
     expect(find.byKey(HomeScreen.documentsKey), findsNothing);
   });
 
+  testWidgets('หน้าแรก: มีส่วนสอบถามปัญหาเพิ่มเติมพร้อมเบอร์โทร', (
+    tester,
+  ) async {
+    useDesktopView(tester, size: const Size(1400, 2000));
+    backend = await installFakeBackend();
+    await pumpScreen(
+      tester,
+      Scaffold(body: HomeScreen(authProvider: AuthProvider())),
+    );
+    final contact = find.byKey(HomeScreen.contactKey);
+    expect(contact, findsOneWidget);
+    expect(
+      find.descendant(of: contact, matching: find.text('สอบถามปัญหาเพิ่มเติม')),
+      findsOneWidget,
+    );
+    for (final line in [
+      'ศูนย์เทคโนโลยีสารสนเทศ กรมทางหลวง โทร. 26727, 26728',
+      'งานฌาปนกิจ โทร. 25142',
+    ]) {
+      expect(
+        find.descendant(
+          of: contact,
+          matching: find.text(line, findRichText: true),
+        ),
+        findsOneWidget,
+        reason: line,
+      );
+    }
+  });
+
   group('นำไฟล์เข้า › เอกสารหน้าแรก', () {
     PickedFile? next;
     Future<PickedFile?> picker() async => next;
