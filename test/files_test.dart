@@ -115,18 +115,54 @@ void main() {
         expect(find.text('ทะเบียนคุมรายชื่อ กันยายน 2569'), findsOneWidget);
         expect(find.text('ทะเบียนคุม ก.ย. 69 ลูกจ้าง'), findsOneWidget);
 
+        // แตะเพิ่มอีกเดือน = เลือกสองเดือน ตารางรวมทั้งสองเดือนพร้อมคอลัมน์ปี-เดือน
         await tester.tap(find.byKey(const ValueKey('month-8')));
         await tester.pumpAndSettle();
-        expect(backend.queryOf('GET /api/monthyear-files'), {
-          'yearMonth': '2569-08',
-        });
+        expect(
+          find.text('ทะเบียนคุมรายชื่อ สิงหาคม, กันยายน 2569'),
+          findsOneWidget,
+        );
         expect(find.text('ทะเบียนคุม ส.ค. 69'), findsOneWidget);
+        expect(find.text('ทะเบียนคุม ก.ย. 69 ลูกจ้าง'), findsOneWidget);
+        expect(find.text('ปี-เดือน'), findsOneWidget);
 
         await tester.tap(find.byKey(const ValueKey('download-m3')));
         await tester.pumpAndSettle();
         expect(saver.saved.single.fileName, 'ทะเบียนคุม-m3.pdf');
+
+        // แตะเดือนที่เลือกอยู่ = ยกเลิก เหลือเดือนเดียว
+        await tester.tap(find.byKey(const ValueKey('month-9')));
+        await tester.pumpAndSettle();
+        expect(backend.queryOf('GET /api/monthyear-files'), {
+          'yearMonth': '2569-08',
+        });
+        expect(find.text('ทะเบียนคุมรายชื่อ สิงหาคม 2569'), findsOneWidget);
+        expect(find.text('ทะเบียนคุม ก.ย. 69 ลูกจ้าง'), findsNothing);
+        expect(find.text('ปี-เดือน'), findsNothing);
+
+        // เดือนสุดท้ายที่เหลือยกเลิกไม่ได้
+        await tester.tap(find.byKey(const ValueKey('month-8')));
+        await tester.pumpAndSettle();
+        expect(find.text('ทะเบียนคุมรายชื่อ สิงหาคม 2569'), findsOneWidget);
       },
     );
+
+    testWidgets('เลือกทุกเดือนที่มีไฟล์ แล้วกลับเป็นเดือนเดียว', (tester) async {
+      await setUpAs(tester, 'member1', 'Member@2569x');
+      await pumpScreen(
+        tester,
+        MonthYearFilesScreen(apiService: ApiService(), today: today),
+      );
+      await tester.tap(find.byKey(MonthYearFilesScreen.selectAllKey));
+      await tester.pumpAndSettle();
+      expect(find.text('ทะเบียนคุม ส.ค. 69'), findsOneWidget);
+      expect(find.text('ทะเบียนคุม ก.ย. 69 ลูกจ้าง'), findsOneWidget);
+
+      await tester.tap(find.byKey(MonthYearFilesScreen.selectLatestKey));
+      await tester.pumpAndSettle();
+      expect(find.text('ทะเบียนคุมรายชื่อ กันยายน 2569'), findsOneWidget);
+      expect(find.byKey(MonthYearFilesScreen.selectLatestKey), findsNothing);
+    });
 
     testWidgets('เดือนที่ไม่มีไฟล์: แสดงข้อความว่าง', (tester) async {
       await setUpAs(tester, 'member1', 'Member@2569x');
@@ -135,6 +171,8 @@ void main() {
         MonthYearFilesScreen(apiService: ApiService(), today: today),
       );
       await tester.tap(find.byKey(const ValueKey('month-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('month-9')));
       await tester.pumpAndSettle();
       expect(find.text('ไม่มีทะเบียนคุมรายชื่อของเดือนนี้'), findsOneWidget);
     });
