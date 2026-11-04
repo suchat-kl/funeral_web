@@ -1076,7 +1076,11 @@ class FakeBackend implements HttpClientAdapter {
         final idcard = '${body?['idcard']}';
         final typed = '${body?['fullName'] ?? ''}'.trim();
         final inDpis = dpis.contains(idcard);
-        if (!inDpis && typed.isEmpty) {
+        final account = users.values
+            .where((u) => u.idcard == idcard && u.fullName.trim().isNotEmpty)
+            .map((u) => u.fullName.trim())
+            .firstOrNull;
+        if (!inDpis && account == null && typed.isEmpty) {
           return _err(
             400,
             'NOT_IN_DPIS',
@@ -1086,8 +1090,10 @@ class FakeBackend implements HttpClientAdapter {
         final u = {
           'id': 'up${++_serial}',
           'idcard': idcard,
-          'fullName': inDpis ? 'ทดสอบ ผู้นำไฟล์ใหม่' : typed,
-          'manualName': !inDpis,
+          'fullName': inDpis ? 'ทดสอบ ผู้นำไฟล์ใหม่' : (account ?? typed),
+          'nameSource': inDpis
+              ? 'DPIS'
+              : (account != null ? 'ACCOUNT' : 'MANUAL'),
           'addedBy': me,
           'addedAt': '2026-11-01T09:00:00',
         };

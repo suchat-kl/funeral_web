@@ -1159,7 +1159,8 @@ class ApiService {
 
   /// เพิ่มผู้มีสิทธิ์นำไฟล์เข้าด้วยเลขบัตร ห้าม log [idcard] / [fullName]
   ///
-  /// พบใน DPIS = ใช้ชื่อจาก DPIS; ไม่พบและไม่ส่ง [fullName] = ApiException code `NOT_IN_DPIS`
+  /// ชื่อมาจาก DPIS → บัญชีที่ลงทะเบียนด้วยเลขบัตรนี้ → [fullName] ตามลำดับ
+  /// ไม่พบทั้งสองที่และไม่ส่ง [fullName] = ApiException code `NOT_IN_DPIS`
   /// (หน้าจอเปิดช่องชื่อ-สกุลให้ผู้ดูแลกรอกเองแล้วส่งใหม่)
   Future<Uploader> addUploader(String idcard, {String? fullName}) async {
     final r = await _authedRequest(
