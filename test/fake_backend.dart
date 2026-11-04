@@ -1074,13 +1074,20 @@ class FakeBackend implements HttpClientAdapter {
       if (call == 'GET /api/admin/uploaders') return _json(200, uploaders);
       if (call == 'POST /api/admin/uploaders') {
         final idcard = '${body?['idcard']}';
-        if (!dpis.contains(idcard)) {
-          return _err(404, 'NOT_FOUND', 'ไม่พบเลขบัตรนี้ในข้อมูลบุคลากร');
+        final typed = '${body?['fullName'] ?? ''}'.trim();
+        final inDpis = dpis.contains(idcard);
+        if (!inDpis && typed.isEmpty) {
+          return _err(
+            400,
+            'NOT_IN_DPIS',
+            'ไม่พบเลขบัตรนี้ในทะเบียนบุคลากร (DPIS) กรุณากรอกชื่อ-สกุลเพื่อเพิ่ม',
+          );
         }
         final u = {
           'id': 'up${++_serial}',
           'idcard': idcard,
-          'fullName': 'ทดสอบ ผู้นำไฟล์ใหม่',
+          'fullName': inDpis ? 'ทดสอบ ผู้นำไฟล์ใหม่' : typed,
+          'manualName': !inDpis,
           'addedBy': me,
           'addedAt': '2026-11-01T09:00:00',
         };

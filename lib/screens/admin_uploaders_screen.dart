@@ -13,6 +13,9 @@ import '../widgets/work_parts.dart';
 
 /// ผู้ดูแล › ผู้มีสิทธิ์นำไฟล์เข้า — เพิ่มด้วยเลขบัตร (ชื่อจาก DPIS) / ลบ
 ///
+/// ไม่พบเลขบัตรใน DPIS (เช่นเจ้าหน้าที่ฌาปนกิจที่ไม่มีในทะเบียนบุคลากร) = เปิดช่องชื่อ-สกุลให้ผู้ดูแลกรอกเองแล้วกดเพิ่มอีกครั้ง
+/// แก้เลขบัตรเมื่อไหร่ ช่องชื่อ-สกุลปิดไป (เลขใหม่ต้องตรวจกับ DPIS ก่อน)
+///
 /// สิทธิ์มีผลตั้งแต่ผู้นั้นเข้าสู่ระบบครั้งถัดไป (backend ตรวจรายชื่อทุกครั้งที่เข้าสู่ระบบ)
 /// เลขบัตรแสดงแบบปิดบางส่วน ไม่ log
 class AdminUploadersScreen extends StatefulWidget {
@@ -26,6 +29,9 @@ class AdminUploadersScreen extends StatefulWidget {
 
   static const Key idcardKey = ValueKey('uploader-idcard');
   static const Key addKey = ValueKey('uploader-add');
+  static const Key fullNameKey = ValueKey('uploader-fullname');
+  static const Key notInDpisKey = ValueKey('uploader-not-in-dpis');
+  static Key manualTagKey(String id) => ValueKey('uploader-manual-$id');
   static Key deleteKey(String id) => ValueKey('uploader-delete-$id');
 
   @override
@@ -35,7 +41,11 @@ class AdminUploadersScreen extends StatefulWidget {
 class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
   final _formKey = GlobalKey<FormState>();
   final _idcard = TextEditingController();
+  final _fullName = TextEditingController();
   List<Uploader> _list = [];
+
+  /// เลขบัตรที่ backend ตอบว่าไม่พบใน DPIS (null = ยังไม่ต้องกรอกชื่อเอง)
+  String? _notInDpisFor;
   bool _loading = true;
   bool _adding = false;
   String? _error;
@@ -50,6 +60,7 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
   @override
   void dispose() {
     _idcard.dispose();
+    _fullName.dispose();
     super.dispose();
   }
 
@@ -74,26 +85,55 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
     }
   }
 
+  bool get _needName =>
+      _notInDpisFor != null && _notInDpisFor == _idcard.text.trim();
+
+  /// แก้เลขบัตร = ปิดช่องชื่อ-สกุล (เลขใหม่ต้องตรวจกับ DPIS ก่อน)
+  void _idcardChanged(String v) {
+    if (_notInDpisFor != null && v.trim() != _notInDpisFor) {
+      setState(() {
+        _notInDpisFor = null;
+        _addError = null;
+        _fullName.clear();
+      });
+    }
+  }
+
   Future<void> _add() async {
     if (_adding || !_formKey.currentState!.validate()) return;
+    final idcard = _idcard.text.trim();
+    final needName = _needName;
     setState(() {
       _adding = true;
       _addError = null;
     });
     try {
-      final u = await widget.apiService.addUploader(_idcard.text.trim());
+      final u = await widget.apiService.addUploader(
+        idcard,
+        fullName: needName ? _fullName.text.trim() : null,
+      );
       if (!mounted) return;
       _idcard.clear();
-      setState(() => _adding = false);
+      _fullName.clear();
+      setState(() {
+        _adding = false;
+        _notInDpisFor = null;
+      });
       context.showSuccessSnackBar(
         'เพิ่ม ${u.fullName.isEmpty ? 'ผู้มีสิทธิ์' : u.fullName} เรียบร้อย มีผลเมื่อเข้าสู่ระบบครั้งถัดไป',
       );
       await _load();
     } catch (e) {
       if (!mounted) return;
+      final notInDpis = e is ApiException && e.code == ErrorCodes.notInDpis;
       setState(() {
         _adding = false;
-        _addError = e.toString();
+        if (notInDpis) {
+          _notInDpisFor = idcard;
+          _addError = null;
+        } else {
+          _addError = e.toString();
+        }
       });
     }
   }
@@ -128,6 +168,7 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
               'ผู้ที่นำแบบฟอร์มและทะเบียนคุมรายชื่อเข้าระบบได้ และดูรายงานฌาปนกิจได้',
           bullets: [
             'เพิ่มด้วยเลขบัตรประชาชน ระบบอ่านชื่อจากข้อมูลบุคลากร (DPIS)',
+            'ไม่พบใน DPIS (เช่นเจ้าหน้าที่ฌาปนกิจ) กรอกชื่อ-สกุลเองแล้วเพิ่มได้',
             'เพิ่ม/ลบแล้วมีผลเมื่อผู้นั้นเข้าสู่ระบบครั้งถัดไป',
           ],
         ),
@@ -154,6 +195,7 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                       LengthLimitingTextInputFormatter(13),
                     ],
                     style: screenText(),
+                    onChanged: _idcardChanged,
                     validator: (v) {
                       final s = (v ?? '').trim();
                       if (s.isEmpty) return 'กรุณากรอกเลขบัตรประชาชน';
@@ -180,6 +222,38 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                     ),
                   ),
                 ),
+                if (_needName)
+                  SizedBox(
+                    width: 320,
+                    child: TextFormField(
+                      key: AdminUploadersScreen.fullNameKey,
+                      controller: _fullName,
+                      enabled: !_adding,
+                      autofocus: true,
+                      inputFormatters: [LengthLimitingTextInputFormatter(150)],
+                      style: screenText(),
+                      validator: (v) => (v ?? '').trim().isEmpty
+                          ? 'กรุณากรอกชื่อ-สกุล'
+                          : null,
+                      onFieldSubmitted: (_) => _add(),
+                      decoration: InputDecoration(
+                        labelText: 'ชื่อ-สกุล (กรอกเอง)',
+                        hintText: 'เช่น นางสาวสมใจ ใจดี',
+                        labelStyle: screenText(color: AppTheme.textSecondary),
+                        errorStyle: screenText(
+                          size: 12.5,
+                          color: AppTheme.dangerColor,
+                        ),
+                        prefixIcon: const Icon(Icons.person_outline),
+                        isDense: true,
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
                 PrimaryActionButton(
                   key: AdminUploadersScreen.addKey,
                   label: 'เพิ่ม',
@@ -187,6 +261,14 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                   loading: _adding,
                   onPressed: _adding ? null : _add,
                 ),
+                if (_needName)
+                  const NoticeBar(
+                    key: AdminUploadersScreen.notInDpisKey,
+                    type: NoticeType.warning,
+                    text:
+                        'ไม่พบเลขบัตรนี้ในทะเบียนบุคลากร (DPIS) — ถ้าเป็นเจ้าหน้าที่ที่ไม่มีใน DPIS '
+                        'ให้กรอกชื่อ-สกุลแล้วกด "เพิ่ม" อีกครั้ง',
+                  ),
                 if (_addError != null)
                   NoticeBar(type: NoticeType.error, text: _addError!),
               ],
@@ -218,12 +300,26 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                         flex: 5,
                         child: Padding(
                           padding: const EdgeInsets.all(6),
-                          child: Text(
-                            u.fullName.isEmpty ? '-' : u.fullName,
-                            style: screenText(
-                              size: 14.5,
-                              weight: FontWeight.w600,
-                            ),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                u.fullName.isEmpty ? '-' : u.fullName,
+                                style: screenText(
+                                  size: 14.5,
+                                  weight: FontWeight.w600,
+                                ),
+                              ),
+                              if (u.manualName)
+                                StatusChip(
+                                  'ไม่พบใน DPIS',
+                                  AppTheme.warningColor,
+                                  icon: Icons.edit_note,
+                                  key: AdminUploadersScreen.manualTagKey(u.id),
+                                ),
+                            ],
                           ),
                         ),
                       ),

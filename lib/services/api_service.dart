@@ -1157,12 +1157,15 @@ class ApiService {
     );
   }
 
-  /// เพิ่มผู้มีสิทธิ์นำไฟล์เข้าด้วยเลขบัตร (ชื่อจาก DPIS) ห้าม log [idcard]
-  Future<Uploader> addUploader(String idcard) async {
+  /// เพิ่มผู้มีสิทธิ์นำไฟล์เข้าด้วยเลขบัตร ห้าม log [idcard] / [fullName]
+  ///
+  /// พบใน DPIS = ใช้ชื่อจาก DPIS; ไม่พบและไม่ส่ง [fullName] = ApiException code `NOT_IN_DPIS`
+  /// (หน้าจอเปิดช่องชื่อ-สกุลให้ผู้ดูแลกรอกเองแล้วส่งใหม่)
+  Future<Uploader> addUploader(String idcard, {String? fullName}) async {
     final r = await _authedRequest(
       'POST',
       '/api/admin/uploaders',
-      data: {'idcard': idcard},
+      data: {'idcard': idcard, 'fullName': ?fullName},
     );
     if (r.statusCode == 200 && r.data is Map) {
       return Uploader.fromJson(Map<String, dynamic>.from(r.data));
