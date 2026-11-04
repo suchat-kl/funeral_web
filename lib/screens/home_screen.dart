@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadStats();
     _loadDocuments();
     try {
-      final forms = await _api.getGeneralFiles();
+      final forms = await _api.getGeneralFiles(category: FileCategory.form);
       if (!mounted) return;
       setState(() {
         _forms = forms;

@@ -19,6 +19,8 @@ import '../widgets/work_parts.dart';
 /// - ฟอร์มนำเข้า: ประเภทไฟล์ (ไม่บังคับ), ชื่อไฟล์ดาวน์โหลด, ไฟล์ (pdf doc docx xls xlsx zip ≤ 20 MB),
 ///   แบบฟอร์มสำหรับ (ข้าราชการ/ลูกจ้างประจำ/ทั้งหมด) เฉพาะแบบฟอร์มทั่วไป และปี/เดือนเฉพาะทะเบียนคุม
 ///   (ทะเบียนคุม: ทุกคนที่เข้าสู่ระบบเห็นทุกไฟล์ จึงไม่มีช่องแบบฟอร์มสำหรับ ส่งเป็น "ทั้งหมด" เสมอ)
+/// - แบบฟอร์มทั่วไปเลือกหมวดก่อน (radio) รายชื่อผู้เสียชีวิต (ค่าเริ่มต้น) / แบบฟอร์มทั่วไป
+///   เลือกแล้วเติมประเภทไฟล์ให้ตามหมวด ([FileCategory.typeOf]) — หมวดกำหนดว่าไฟล์ขึ้นเมนูดาวน์โหลดไหน
 /// - ตาราง: ทุกไฟล์ (ทะเบียนคุมกรองตามปี-เดือนที่เลือก) แก้รายละเอียด / ลบ (ลบไฟล์บนดิสก์ด้วย)
 class UploadFilesScreen extends StatefulWidget {
   final ApiService apiService;
@@ -60,7 +62,10 @@ class UploadFilesScreen extends StatefulWidget {
 class _UploadFilesScreenState extends State<UploadFilesScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
-  final _type = TextEditingController();
+  late final _type = TextEditingController(
+    text: _monthYear ? '' : FileCategory.typeOf(_category),
+  );
+  String _category = FileCategory.deceased;
   late final DateTime _today = widget.today ?? DateTime.now();
   late int _year = _today.year + 543;
   late int _month = _today.month;
@@ -163,6 +168,7 @@ class _UploadFilesScreenState extends State<UploadFilesScreen> {
         title: _title.text,
         fileFor: _monthYear ? FileFor.all : _fileFor,
         yearMonth: _monthYear ? Util.yearMonth(_year, _month) : null,
+        category: _monthYear ? null : _category,
       );
       if (!mounted) return;
       setState(() {
@@ -303,6 +309,22 @@ class _UploadFilesScreenState extends State<UploadFilesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (!_monthYear) ...[
+                  Text(
+                    'นำเข้าเป็น',
+                    style: screenText(weight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  FileCategoryRadios(
+                    value: _category,
+                    enabled: !_uploading,
+                    onChanged: (v) => setState(() {
+                      _category = v;
+                      _type.text = FileCategory.typeOf(v);
+                    }),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 TextFormField(
                   key: UploadFilesScreen.typeKey,
                   controller: _type,

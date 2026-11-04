@@ -42,6 +42,11 @@ void main() {
         expect(find.text('ประกาศอัตราเงินสงเคราะห์'), findsOneWidget);
         expect(find.text('แบบเปลี่ยนผู้รับเงิน (ข้าราชการ)'), findsNothing);
         expect(backend.authOf('GET /api/public/general-files'), isNull);
+        // เมนูแบบฟอร์มทั่วไปไม่รวมรายชื่อผู้เสียชีวิต
+        expect(backend.queryOf('GET /api/public/general-files'), {
+          'category': 'FORM',
+        });
+        expect(find.text('ประจำเดือน ตุลาคม 2569'), findsNothing);
 
         await tester.tap(find.byKey(const ValueKey('download-g1')));
         await tester.pumpAndSettle();
@@ -66,6 +71,28 @@ void main() {
         expect(find.text('แบบเปลี่ยนผู้รับเงิน (ลูกจ้างประจำ)'), findsNothing);
       },
     );
+
+    testWidgets('เมนูรายชื่อผู้เสียชีวิต: แสดงเฉพาะหมวดรายชื่อ ดาวน์โหลดได้', (
+      tester,
+    ) async {
+      await setUpAs(tester, null, null);
+      await pumpScreen(
+        tester,
+        GeneralFilesScreen(
+          apiService: ApiService(),
+          category: FileCategory.deceased,
+        ),
+      );
+      expect(backend.queryOf('GET /api/public/general-files'), {
+        'category': 'DECEASED',
+      });
+      expect(find.text(GeneralFilesScreen.deceasedTitle), findsOneWidget);
+      expect(find.text('ประจำเดือน ตุลาคม 2569'), findsOneWidget);
+      expect(find.text('แบบคำขอสมัครสมาชิก'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('download-g5')));
+      await tester.pumpAndSettle();
+      expect(saver.saved.single.fileName, 'deceased-6910.pdf');
+    });
 
     testWidgets('ค้นหาในตาราง', (tester) async {
       await setUpAs(tester, 'admin1', 'Admin@2569x');
@@ -212,13 +239,22 @@ void main() {
       next = PickedFile('แบบใหม่.pdf', Uint8List.fromList([1, 2, 3]));
       await tapKey(tester, UploadFilesScreen.pickKey);
       expect(find.text('แบบใหม่.pdf (3 B)'), findsOneWidget);
-      await tester.enterText(find.byKey(UploadFilesScreen.typeKey), 'แบบฟอร์ม');
+      // เลือกหมวดแบบฟอร์มทั่วไป = ประเภทไฟล์เปลี่ยนเป็น "แบบฟอร์ม" ให้
+      await tapKey(tester, FileCategoryRadios.optionKey(FileCategory.form));
+      expect(
+        tester
+            .widget<TextFormField>(find.byKey(UploadFilesScreen.typeKey))
+            .controller!
+            .text,
+        'แบบฟอร์ม',
+      );
       await tapKey(tester, FileForChips.chipKey(1));
       await tapKey(tester, UploadFilesScreen.submitKey);
 
       final body = backend.bodyOf('POST /api/upload/general-files')!;
       expect(body['title'], 'แบบใหม่');
       expect(body['typeFile'], 'แบบฟอร์ม');
+      expect(body['category'], 'FORM');
       expect(body['fileFor'], '1');
       expect(body['file'], 'แบบใหม่.pdf');
       expect(body['fileSize'], 3);
@@ -228,6 +264,46 @@ void main() {
         startsWith('Bearer '),
       );
       expect(find.text('แบบใหม่'), findsOneWidget);
+    });
+
+    testWidgets(
+      'แบบฟอร์มทั่วไป: ค่าเริ่มต้นคือรายชื่อผู้เสียชีวิต พร้อมประเภทไฟล์',
+      (tester) async {
+        await openUpload(tester, StoredFile.kindGeneral);
+        TextEditingController typeCtrl() => tester
+            .widget<TextFormField>(find.byKey(UploadFilesScreen.typeKey))
+            .controller!;
+        expect(typeCtrl().text, FileCategory.deceasedType);
+        next = PickedFile('ต.ค. 2569.pdf', Uint8List.fromList([1, 2, 3]));
+        await tapKey(tester, UploadFilesScreen.pickKey);
+        await tapKey(tester, UploadFilesScreen.submitKey);
+        final body = backend.bodyOf('POST /api/upload/general-files')!;
+        expect(body['category'], 'DECEASED');
+        expect(body['typeFile'], FileCategory.deceasedType);
+        // นำเข้าแล้วยังคงหมวดและประเภทไฟล์เดิมไว้ นำเข้าเดือนถัดไปต่อได้เลย
+        expect(typeCtrl().text, FileCategory.deceasedType);
+
+        // สลับไปแบบฟอร์มแล้วกลับมา ประเภทไฟล์เปลี่ยนตาม
+        await tapKey(tester, FileCategoryRadios.optionKey(FileCategory.form));
+        expect(typeCtrl().text, FileCategory.formType);
+        await tapKey(
+          tester,
+          FileCategoryRadios.optionKey(FileCategory.deceased),
+        );
+        expect(typeCtrl().text, FileCategory.deceasedType);
+      },
+    );
+
+    testWidgets('ทะเบียนคุมไม่มีตัวเลือกหมวด', (tester) async {
+      await openUpload(tester, StoredFile.kindMonthYear);
+      expect(find.byType(FileCategoryRadios), findsNothing);
+      expect(
+        tester
+            .widget<TextFormField>(find.byKey(UploadFilesScreen.typeKey))
+            .controller!
+            .text,
+        '',
+      );
     });
 
     testWidgets('ชนิดไฟล์ไม่รับ / ใหญ่เกิน 20 MB: เตือน ไม่ส่ง', (
@@ -287,6 +363,7 @@ void main() {
       // ตัวเลือกในหน้าต่าง (ชุดหลังสุด) ไม่ใช่ของฟอร์มนำเข้าด้านหลัง
       await tester.tap(find.byKey(FileForChips.chipKey(2)).last);
       await tester.pumpAndSettle();
+      // หน้าต่างเปิดมาที่หมวดของไฟล์ (g1 = แบบฟอร์มทั่วไป)
       await tester.tap(find.text('บันทึก').last);
       await tester.pumpAndSettle();
       expect(backend.bodyOf('PUT /api/upload/general-files/g1'), {
@@ -294,6 +371,7 @@ void main() {
         'title': 'แบบคำขอสมัครสมาชิก (ฉบับใหม่)',
         'fileFor': 2,
         'yearMonth': null,
+        'category': 'FORM',
       });
       expect(find.text('แบบคำขอสมัครสมาชิก (ฉบับใหม่)'), findsOneWidget);
     });

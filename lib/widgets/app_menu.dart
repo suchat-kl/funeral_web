@@ -83,6 +83,16 @@ List<AppMenuGroup> buildAppMenu() {
       icon: Icons.download,
       items: [
         AppMenuItem(
+          id: 'deceased-files',
+          title: GeneralFilesScreen.deceasedTitle,
+          icon: GeneralFilesScreen.deceasedIcon,
+          visible: (a) => a.generalFiles,
+          screen: () => GeneralFilesScreen(
+            apiService: api(),
+            category: FileCategory.deceased,
+          ),
+        ),
+        AppMenuItem(
           id: 'general-files',
           title: GeneralFilesScreen.menuTitle,
           icon: GeneralFilesScreen.menuIcon,

@@ -9,6 +9,7 @@ import 'screen_parts.dart';
 
 /// หน้าต่างแก้รายละเอียดไฟล์ที่นำเข้าแล้ว (ประเภท ชื่อไฟล์ดาวน์โหลด แบบฟอร์มสำหรับ ปี-เดือน) — ไม่เปลี่ยนตัวไฟล์
 /// ทะเบียนคุมไม่มีช่องแบบฟอร์มสำหรับ (ทุกคนที่เข้าสู่ระบบเห็นทุกไฟล์) ส่งเป็น "ทั้งหมด"
+/// แบบฟอร์มทั่วไปเปลี่ยนหมวดได้ (radio) เปลี่ยนแล้วเติมประเภทไฟล์ตามหมวดให้
 ///
 /// คืน [StoredFile] ที่บันทึกแล้ว (กดยกเลิก = null)
 class UploadFileDialog extends StatefulWidget {
@@ -36,6 +37,7 @@ class _UploadFileDialogState extends State<UploadFileDialog> {
   late final _title = TextEditingController(text: widget.file.title);
   late final _type = TextEditingController(text: widget.file.typeFile);
   late int _fileFor = widget.file.fileFor;
+  late String _category = FileCategory.of(widget.file);
   late int _year;
   late int _month;
   bool _busy = false;
@@ -79,6 +81,7 @@ class _UploadFileDialogState extends State<UploadFileDialog> {
         title: _title.text,
         fileFor: _monthYear ? FileFor.all : _fileFor,
         yearMonth: _monthYear ? Util.yearMonth(_year, _month) : null,
+        category: _monthYear ? null : _category,
       );
       if (!mounted) return;
       Navigator.of(context).pop(saved);
@@ -105,6 +108,19 @@ class _UploadFileDialogState extends State<UploadFileDialog> {
           children: [
             if (_error != null) ...[
               AccountBanner.error(_error!),
+              const SizedBox(height: 12),
+            ],
+            if (!_monthYear) ...[
+              Text('หมวด', style: screenText(weight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              FileCategoryRadios(
+                value: _category,
+                enabled: !_busy,
+                onChanged: (v) => setState(() {
+                  _category = v;
+                  _type.text = FileCategory.typeOf(v);
+                }),
+              ),
               const SizedBox(height: 12),
             ],
             AccountField(
@@ -202,5 +218,51 @@ class FileForChips extends StatelessWidget {
           onSelected: enabled ? (_) => onChanged(e.key) : null,
         ),
     ],
+  );
+}
+
+/// ตัวเลือกหมวดของแบบฟอร์มทั่วไป (radio): รายชื่อผู้เสียชีวิต / แบบฟอร์มทั่วไป
+class FileCategoryRadios extends StatelessWidget {
+  final String value;
+  final ValueChanged<String> onChanged;
+  final bool enabled;
+
+  const FileCategoryRadios({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    this.enabled = true,
+  });
+
+  static Key optionKey(String v) => ValueKey('file-category-$v');
+
+  @override
+  Widget build(BuildContext context) => RadioGroup<String>(
+    groupValue: value,
+    onChanged: (v) {
+      if (v != null && enabled) onChanged(v);
+    },
+    child: Wrap(
+      spacing: 16,
+      runSpacing: 4,
+      children: [
+        for (final e in FileCategory.names.entries)
+          InkWell(
+            key: optionKey(e.key),
+            borderRadius: BorderRadius.circular(8),
+            onTap: enabled ? () => onChanged(e.key) : null,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Radio<String>(value: e.key, enabled: enabled),
+                  Text(e.value, style: screenText(size: 14)),
+                ],
+              ),
+            ),
+          ),
+      ],
+    ),
   );
 }

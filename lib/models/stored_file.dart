@@ -28,6 +28,9 @@ class StoredFile {
   /// แบบฟอร์มสำหรับ: 1 ข้าราชการ / 2 ลูกจ้างประจำ / 3 ทั้งหมด ([FileFor])
   final int fileFor;
 
+  /// เฉพาะแบบฟอร์มทั่วไป: หมวด [FileCategory] (รายการเก่าที่ยังไม่ได้ปรับค่า = null)
+  final String? category;
+
   /// เฉพาะทะเบียนคุม: ปี พ.ศ.-เดือน เช่น "2569-10"
   final String? yearMonth;
   final int size;
@@ -47,6 +50,7 @@ class StoredFile {
     required this.title,
     this.fileName = '',
     this.fileFor = FileFor.all,
+    this.category,
     this.yearMonth,
     this.size = 0,
     this.contentType,
@@ -62,6 +66,7 @@ class StoredFile {
     title: '${j['title'] ?? ''}'.trim(),
     fileName: '${j['fileName'] ?? ''}'.trim(),
     fileFor: _int(j['fileFor'], FileFor.all),
+    category: _str(j['category']),
     yearMonth: _str(j['yearMonth']),
     size: _int(j['size']),
     contentType: _str(j['contentType']),
@@ -95,4 +100,35 @@ class StoredFile {
     final s = '${v ?? ''}'.trim();
     return s.isEmpty ? null : s;
   }
+}
+
+/// หมวดของแบบฟอร์มทั่วไป = เมนูดาวน์โหลดที่แสดง (ช่อง `category` ของ backend)
+class FileCategory {
+  FileCategory._();
+
+  /// ดาวน์โหลด › รายชื่อผู้เสียชีวิต
+  static const String deceased = 'DECEASED';
+
+  /// ดาวน์โหลด › แบบฟอร์มทั่วไป (รวมรายการที่ยังไม่มีหมวด)
+  static const String form = 'FORM';
+
+  /// ประเภทไฟล์ที่เติมให้เมื่อเลือกหมวด (ค่าเดียวกับ backend StoredFile.DECEASED_TYPE / FORM_TYPE)
+  static const String deceasedType =
+      'งานฌาปนกิจสงเคราะห์ - รายชื่อสมาชิกผู้เสียชีวิต';
+  static const String formType = 'แบบฟอร์ม';
+
+  /// ชื่อที่แสดง เรียงตามตัวเลือกตอนนำเข้า (ตัวแรก = ค่าเริ่มต้น)
+  static const Map<String, String> names = {
+    deceased: 'รายชื่อผู้เสียชีวิต',
+    form: 'แบบฟอร์มทั่วไป',
+  };
+
+  /// ประเภทไฟล์ตั้งต้นของหมวด
+  static String typeOf(String category) =>
+      category == deceased ? deceasedType : formType;
+
+  /// หมวดของไฟล์ — ยังไม่มีหมวดให้เดาจากประเภทไฟล์แบบเดียวกับ backend
+  static String of(StoredFile f) =>
+      f.category ??
+      (f.typeFile.contains('รายชื่อสมาชิกผู้เสียชีวิต') ? deceased : form);
 }
