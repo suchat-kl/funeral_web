@@ -164,7 +164,7 @@ void main() {
 
   group('ผู้ดูแล › ผู้มีสิทธิ์นำไฟล์เข้า', () {
     testWidgets(
-      'เพิ่มด้วยเลขบัตร (ตรวจหลักตรวจสอบก่อน) แสดงชื่อจาก DPIS และลบได้',
+      'เพิ่มด้วยเลขบัตรของผู้ที่ลงทะเบียนแล้ว (ตรวจหลักตรวจสอบก่อน) แสดงชื่อจากบัญชีและลบได้',
       (tester) async {
         await setUpAs(tester, 'admin1', 'Admin@2569x');
         await pumpScreen(
@@ -186,11 +186,20 @@ void main() {
         expect(find.text('เลขบัตรประชาชนไม่ถูกต้อง'), findsOneWidget);
         expect(backend.calls, isNot(contains('POST /api/admin/uploaders')));
 
-        final id = fakeIdcard('200000000003');
+        final id = backend.users['nonmember1']!.idcard;
         await tester.enterText(find.byKey(AdminUploadersScreen.idcardKey), id);
         await tapKey(tester, AdminUploadersScreen.addKey);
         expect(backend.bodyOf('POST /api/admin/uploaders'), {'idcard': id});
-        expect(find.text('ทดสอบ ผู้นำไฟล์ใหม่'), findsOneWidget);
+        expect(find.text('ทดสอบ ไม่ใช่สมาชิก'), findsOneWidget);
+        final added = backend.uploaders.last['id'] as String;
+        expect(
+          find.descendant(
+            of: find.byKey(ValueKey('uploader-username-$added')),
+            matching: find.text('nonmember1'),
+            matchRoot: true,
+          ),
+          findsOneWidget,
+        );
 
         await tapKey(tester, AdminUploadersScreen.deleteKey('up1'));
         await confirm(tester, 'ลบ');
@@ -199,83 +208,7 @@ void main() {
       },
     );
 
-    testWidgets(
-      'ไม่พบใน DPIS: เปิดช่องชื่อ-สกุล กรอกเองแล้วเพิ่มได้ (เจ้าหน้าที่ฌาปนกิจ)',
-      (tester) async {
-        await setUpAs(tester, 'admin1', 'Admin@2569x');
-        await pumpScreen(
-          tester,
-          AdminUploadersScreen(apiService: ApiService()),
-        );
-        final id = fakeIdcard('399999999998');
-        expect(find.byKey(AdminUploadersScreen.fullNameKey), findsNothing);
-        await tester.enterText(find.byKey(AdminUploadersScreen.idcardKey), id);
-        await tapKey(tester, AdminUploadersScreen.addKey);
-        expect(backend.bodyOf('POST /api/admin/uploaders'), {'idcard': id});
-        expect(find.byKey(AdminUploadersScreen.notInDpisKey), findsOneWidget);
-        expect(find.byKey(AdminUploadersScreen.fullNameKey), findsOneWidget);
-
-        // ยังไม่กรอกชื่อ = ไม่ส่ง
-        final before = backend.calls.length;
-        await tapKey(tester, AdminUploadersScreen.addKey);
-        expect(find.text('กรุณากรอกชื่อ-สกุล'), findsOneWidget);
-        expect(backend.calls.length, before);
-
-        await tester.enterText(
-          find.byKey(AdminUploadersScreen.fullNameKey),
-          'นางสาวเจ้าหน้าที่ ฌาปนกิจ',
-        );
-        await tapKey(tester, AdminUploadersScreen.addKey);
-        expect(backend.bodyOf('POST /api/admin/uploaders'), {
-          'idcard': id,
-          'fullName': 'นางสาวเจ้าหน้าที่ ฌาปนกิจ',
-        });
-        expect(find.text('นางสาวเจ้าหน้าที่ ฌาปนกิจ'), findsOneWidget);
-        final added = backend.uploaders.last['id'] as String;
-        expect(
-          find.descendant(
-            of: find.byKey(AdminUploadersScreen.sourceTagKey(added)),
-            matching: find.text('กรอกชื่อเอง'),
-          ),
-          findsOneWidget,
-        );
-        // เพิ่มสำเร็จแล้วช่องชื่อปิด; รายการเก่า (ชื่อจาก DPIS) ไม่มีป้าย
-        expect(find.byKey(AdminUploadersScreen.fullNameKey), findsNothing);
-        expect(
-          find.byKey(AdminUploadersScreen.sourceTagKey('up1')),
-          findsNothing,
-        );
-      },
-    );
-
-    testWidgets(
-      'ไม่พบใน DPIS แต่ลงทะเบียนแล้ว: ใช้ชื่อจากบัญชีผู้ใช้ ไม่ต้องกรอก',
-      (tester) async {
-        await setUpAs(tester, 'admin1', 'Admin@2569x');
-        await pumpScreen(
-          tester,
-          AdminUploadersScreen(apiService: ApiService()),
-        );
-        final id = backend.users['nonmember1']!.idcard;
-        expect(backend.dpis.contains(id), isFalse);
-        await tester.enterText(find.byKey(AdminUploadersScreen.idcardKey), id);
-        await tapKey(tester, AdminUploadersScreen.addKey);
-        expect(backend.bodyOf('POST /api/admin/uploaders'), {'idcard': id});
-        expect(find.byKey(AdminUploadersScreen.fullNameKey), findsNothing);
-        expect(find.byKey(AdminUploadersScreen.notInDpisKey), findsNothing);
-        expect(find.text('ทดสอบ ไม่ใช่สมาชิก'), findsOneWidget);
-        final added = backend.uploaders.last['id'] as String;
-        expect(
-          find.descendant(
-            of: find.byKey(AdminUploadersScreen.sourceTagKey(added)),
-            matching: find.text('ชื่อจากบัญชีผู้ใช้'),
-          ),
-          findsOneWidget,
-        );
-      },
-    );
-
-    testWidgets('แก้เลขบัตรหลังไม่พบใน DPIS = ช่องชื่อ-สกุลปิด', (
+    testWidgets('ยังไม่ลงทะเบียน: เพิ่มไม่ได้ แสดงข้อความของ backend', (
       tester,
     ) async {
       await setUpAs(tester, 'admin1', 'Admin@2569x');
@@ -285,14 +218,14 @@ void main() {
         fakeIdcard('399999999998'),
       );
       await tapKey(tester, AdminUploadersScreen.addKey);
-      expect(find.byKey(AdminUploadersScreen.fullNameKey), findsOneWidget);
-      await tester.enterText(
-        find.byKey(AdminUploadersScreen.idcardKey),
-        fakeIdcard('200000000003'),
+      expect(
+        find.text(
+          'ยังไม่มีผู้ลงทะเบียนด้วยเลขบัตรนี้ ให้เจ้าของเลขบัตรลงทะเบียนก่อน',
+        ),
+        findsOneWidget,
       );
-      await tester.pump();
-      expect(find.byKey(AdminUploadersScreen.fullNameKey), findsNothing);
-      expect(find.byKey(AdminUploadersScreen.notInDpisKey), findsNothing);
+      expect(find.text('ทดสอบ นำไฟล์เข้า'), findsOneWidget);
+      expect(backend.uploaders, hasLength(1));
     });
   });
 
