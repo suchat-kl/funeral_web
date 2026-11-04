@@ -116,6 +116,7 @@ void main() {
 
     void expectItems(Set<String> visible) {
       const all = {
+        'deceased-files',
         'general-files',
         'monthyear-files',
         'receipt-period',
@@ -145,13 +146,19 @@ void main() {
 
     testWidgets('ไม่เข้าสู่ระบบ', (tester) async {
       await openMenu(tester, null, null);
-      expectItems({'general-files', 'register', 'forgot-password'});
+      expectItems({
+        'deceased-files',
+        'general-files',
+        'register',
+        'forgot-password',
+      });
       expect(find.byKey(AppMenuGroup.keyOf('admin')), findsNothing);
     });
 
     testWidgets('ไม่ใช่สมาชิก', (tester) async {
       await openMenu(tester, 'nonmember1', 'NonMember@2569x');
       expectItems({
+        'deceased-files',
         'general-files',
         'monthyear-files',
         'change-password',
@@ -162,6 +169,7 @@ void main() {
     testWidgets('สมาชิก', (tester) async {
       await openMenu(tester, 'member1', 'Member@2569x');
       expectItems({
+        'deceased-files',
         'general-files',
         'monthyear-files',
         'receipt-period',
@@ -174,6 +182,7 @@ void main() {
     testWidgets('ผู้นำไฟล์เข้า (เป็นสมาชิกด้วย)', (tester) async {
       await openMenu(tester, 'upload1', 'Upload@2569x');
       expectItems({
+        'deceased-files',
         'general-files',
         'monthyear-files',
         'receipt-period',
@@ -191,6 +200,7 @@ void main() {
     testWidgets('ผู้ดูแล (ไม่ใช่สมาชิก)', (tester) async {
       await openMenu(tester, 'admin1', 'Admin@2569x');
       expectItems({
+        'deceased-files',
         'general-files',
         'monthyear-files',
         'receipt-cash',

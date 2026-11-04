@@ -784,10 +784,16 @@ class ApiService {
   }
 
   /// แบบฟอร์มทั่วไป — เข้าสู่ระบบอยู่แนบ token (backend กรองตามประเภทบุคลากร) ไม่เข้าสู่ระบบ = เฉพาะ "ทั้งหมด"
-  Future<List<StoredFile>> getGeneralFiles() async {
+  /// แบบฟอร์มทั่วไป — [category] ([FileCategory]) กรองตามเมนู ไม่ส่ง = ทุกหมวด
+  Future<List<StoredFile>> getGeneralFiles({String? category}) async {
+    final query = category == null ? null : {'category': category};
     final r = _isLoggedIn
-        ? await _authedRequest('GET', '/api/public/general-files')
-        : await _publicRequest('GET', '/api/public/general-files');
+        ? await _authedRequest('GET', '/api/public/general-files', query: query)
+        : await _publicRequest(
+            'GET',
+            '/api/public/general-files',
+            query: query,
+          );
     return _files(r, 'โหลดรายการแบบฟอร์มไม่สำเร็จ');
   }
 
@@ -865,12 +871,14 @@ class ApiService {
     required String title,
     required int fileFor,
     String? yearMonth,
+    String? category,
   }) async {
     final r = await _multipart('/api/upload/$kind-files', () {
       return FormData.fromMap({
         if ((typeFile ?? '').trim().isNotEmpty) 'typeFile': typeFile!.trim(),
         'title': title.trim(),
         'fileFor': '$fileFor',
+        'category': ?category,
         if (yearMonth != null && yearMonth.isNotEmpty) 'yearMonth': yearMonth,
         'file': MultipartFile.fromBytes(bytes, filename: fileName),
       });
@@ -889,6 +897,7 @@ class ApiService {
     required String title,
     required int fileFor,
     String? yearMonth,
+    String? category,
   }) async {
     final r = await _authedRequest(
       'PUT',
@@ -898,6 +907,7 @@ class ApiService {
         'title': title.trim(),
         'fileFor': fileFor,
         'yearMonth': yearMonth,
+        'category': category,
       },
     );
     if (r.statusCode == 200 && r.data is Map) {

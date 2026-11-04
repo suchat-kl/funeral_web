@@ -156,7 +156,15 @@ class FakeBackend implements HttpClientAdapter {
 
   /// แบบฟอร์มทั่วไป (fileFor 1/2/3) — backend จริงกรองตามผู้ดู ที่นี่กรองแบบเดียวกัน
   List<Map<String, dynamic>> generalFiles = [
-    _file('g1', 1, 'แบบฟอร์ม', 'แบบคำขอสมัครสมาชิก', 'form1.pdf', 3),
+    _file(
+      'g1',
+      1,
+      'แบบฟอร์ม',
+      'แบบคำขอสมัครสมาชิก',
+      'form1.pdf',
+      3,
+      category: 'FORM',
+    ),
     _file(
       'g2',
       2,
@@ -166,6 +174,15 @@ class FakeBackend implements HttpClientAdapter {
       1,
     ),
     _file('g3', 3, 'ประกาศ', 'ประกาศอัตราเงินสงเคราะห์', 'notice.pdf', 3),
+    _file(
+      'g5',
+      5,
+      'งานฌาปนกิจสงเคราะห์ - รายชื่อสมาชิกผู้เสียชีวิต',
+      'ประจำเดือน ตุลาคม 2569',
+      'deceased-6910.pdf',
+      3,
+      category: 'DECEASED',
+    ),
     _file(
       'g4',
       4,
@@ -401,6 +418,7 @@ class FakeBackend implements HttpClientAdapter {
     String fileName,
     int fileFor, {
     String? ym,
+    String? category,
   }) => {
     'id': id,
     'num': num,
@@ -408,6 +426,7 @@ class FakeBackend implements HttpClientAdapter {
     'title': title,
     'fileName': fileName,
     'fileFor': fileFor,
+    'category': category,
     'yearMonth': ym,
     'size': 2048,
     'contentType': 'application/pdf',
@@ -730,12 +749,20 @@ class FakeBackend implements HttpClientAdapter {
     if (call == 'GET /api/public/general-files') {
       final pt = user?.personType;
       final staff = has('UPLOADER') || has('ADMIN');
+      // หมวด: DECEASED = เฉพาะรายชื่อผู้เสียชีวิต, FORM = ที่ไม่ใช่ (รวมที่ไม่มีหมวด) เหมือน backend
+      final cat = options.queryParameters['category'];
+      bool inCategory(Map<String, dynamic> f) =>
+          cat == null ||
+          (cat == 'DECEASED'
+              ? f['category'] == 'DECEASED'
+              : f['category'] != 'DECEASED');
       return _json(200, [
         for (final f in generalFiles)
-          if (staff ||
-              f['fileFor'] == 3 ||
-              (pt == 'G' && f['fileFor'] == 1) ||
-              (pt == 'E' && f['fileFor'] == 2))
+          if (inCategory(f) &&
+              (staff ||
+                  f['fileFor'] == 3 ||
+                  (pt == 'G' && f['fileFor'] == 1) ||
+                  (pt == 'E' && f['fileFor'] == 2)))
             f,
       ]);
     }
@@ -823,6 +850,7 @@ class FakeBackend implements HttpClientAdapter {
           '${body?['file']}',
           int.parse('${body?['fileFor']}'),
           ym: body?['yearMonth'] as String?,
+          category: body?['category'] as String?,
         );
         if (kind == 'general') {
           generalFiles.add(f);
@@ -837,6 +865,7 @@ class FakeBackend implements HttpClientAdapter {
         f['title'] = body?['title'];
         f['typeFile'] = body?['typeFile'];
         f['fileFor'] = body?['fileFor'];
+        f['category'] = body?['category'];
         if (kind == 'monthyear') f['yearMonth'] = body?['yearMonth'];
         return _json(200, f);
       }
