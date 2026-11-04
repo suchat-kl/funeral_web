@@ -8,6 +8,7 @@ import 'account_form.dart';
 import 'screen_parts.dart';
 
 /// หน้าต่างแก้รายละเอียดไฟล์ที่นำเข้าแล้ว (ประเภท ชื่อไฟล์ดาวน์โหลด แบบฟอร์มสำหรับ ปี-เดือน) — ไม่เปลี่ยนตัวไฟล์
+/// ทะเบียนคุมไม่มีช่องแบบฟอร์มสำหรับ (ทุกคนที่เข้าสู่ระบบเห็นทุกไฟล์) ส่งเป็น "ทั้งหมด"
 ///
 /// คืน [StoredFile] ที่บันทึกแล้ว (กดยกเลิก = null)
 class UploadFileDialog extends StatefulWidget {
@@ -76,7 +77,7 @@ class _UploadFileDialogState extends State<UploadFileDialog> {
         widget.file.id,
         typeFile: _type.text,
         title: _title.text,
-        fileFor: _fileFor,
+        fileFor: _monthYear ? FileFor.all : _fileFor,
         yearMonth: _monthYear ? Util.yearMonth(_year, _month) : null,
       );
       if (!mounted) return;
@@ -126,14 +127,19 @@ class _UploadFileDialogState extends State<UploadFileDialog> {
                   ? 'กรุณากรอกชื่อไฟล์ดาวน์โหลด'
                   : null,
             ),
-            const SizedBox(height: 12),
-            Text('แบบฟอร์มสำหรับ', style: screenText(weight: FontWeight.w600)),
-            const SizedBox(height: 6),
-            FileForChips(
-              value: _fileFor,
-              enabled: !_busy,
-              onChanged: (v) => setState(() => _fileFor = v),
-            ),
+            if (!_monthYear) ...[
+              const SizedBox(height: 12),
+              Text(
+                'แบบฟอร์มสำหรับ',
+                style: screenText(weight: FontWeight.w600),
+              ),
+              const SizedBox(height: 6),
+              FileForChips(
+                value: _fileFor,
+                enabled: !_busy,
+                onChanged: (v) => setState(() => _fileFor = v),
+              ),
+            ],
             if (_monthYear) ...[
               const SizedBox(height: 12),
               Text('ปีและเดือน', style: screenText(weight: FontWeight.w600)),

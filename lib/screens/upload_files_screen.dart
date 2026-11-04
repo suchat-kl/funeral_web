@@ -17,7 +17,8 @@ import '../widgets/work_parts.dart';
 ///
 /// หน้าจอเดียวรับ [kind] (`general` / `monthyear`) ใช้ทั้งสองเมนูย่อย
 /// - ฟอร์มนำเข้า: ประเภทไฟล์ (ไม่บังคับ), ชื่อไฟล์ดาวน์โหลด, ไฟล์ (pdf doc docx xls xlsx zip ≤ 20 MB),
-///   แบบฟอร์มสำหรับ (ข้าราชการ/ลูกจ้างประจำ/ทั้งหมด) และปี/เดือนเฉพาะทะเบียนคุม
+///   แบบฟอร์มสำหรับ (ข้าราชการ/ลูกจ้างประจำ/ทั้งหมด) เฉพาะแบบฟอร์มทั่วไป และปี/เดือนเฉพาะทะเบียนคุม
+///   (ทะเบียนคุม: ทุกคนที่เข้าสู่ระบบเห็นทุกไฟล์ จึงไม่มีช่องแบบฟอร์มสำหรับ ส่งเป็น "ทั้งหมด" เสมอ)
 /// - ตาราง: ทุกไฟล์ (ทะเบียนคุมกรองตามปี-เดือนที่เลือก) แก้รายละเอียด / ลบ (ลบไฟล์บนดิสก์ด้วย)
 class UploadFilesScreen extends StatefulWidget {
   final ApiService apiService;
@@ -160,7 +161,7 @@ class _UploadFilesScreenState extends State<UploadFilesScreen> {
         fileName: file.name,
         typeFile: _type.text,
         title: _title.text,
-        fileFor: _fileFor,
+        fileFor: _monthYear ? FileFor.all : _fileFor,
         yearMonth: _monthYear ? Util.yearMonth(_year, _month) : null,
       );
       if (!mounted) return;
@@ -356,17 +357,19 @@ class _UploadFilesScreenState extends State<UploadFilesScreen> {
                     style: screenText(size: 13, color: AppTheme.dangerColor),
                   ),
                 ],
-                const SizedBox(height: 12),
-                Text(
-                  'แบบฟอร์มสำหรับ',
-                  style: screenText(weight: FontWeight.w600),
-                ),
-                const SizedBox(height: 6),
-                FileForChips(
-                  value: _fileFor,
-                  enabled: !_uploading,
-                  onChanged: (v) => setState(() => _fileFor = v),
-                ),
+                if (!_monthYear) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'แบบฟอร์มสำหรับ',
+                    style: screenText(weight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  FileForChips(
+                    value: _fileFor,
+                    enabled: !_uploading,
+                    onChanged: (v) => setState(() => _fileFor = v),
+                  ),
+                ],
                 if (_monthYear) ...[
                   const SizedBox(height: 10),
                   Text(
@@ -410,6 +413,7 @@ class _UploadFilesScreenState extends State<UploadFilesScreen> {
                   key: ValueKey('upload-${widget.kind}-$_year-$_month'),
                   files: _files,
                   showYearMonth: _monthYear,
+                  showFileFor: !_monthYear,
                   emptyText: 'ยังไม่มีไฟล์',
                   actions: (f) => [
                     IconButton(
