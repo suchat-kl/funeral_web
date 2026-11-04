@@ -13,7 +13,8 @@ import '../widgets/work_parts.dart';
 
 /// ผู้ดูแล › ผู้มีสิทธิ์นำไฟล์เข้า — เพิ่มด้วยเลขบัตร (ชื่อจาก DPIS) / ลบ
 ///
-/// ไม่พบเลขบัตรใน DPIS (เช่นเจ้าหน้าที่ฌาปนกิจที่ไม่มีในทะเบียนบุคลากร) = เปิดช่องชื่อ-สกุลให้ผู้ดูแลกรอกเองแล้วกดเพิ่มอีกครั้ง
+/// ชื่อมาจาก DPIS → บัญชีที่ลงทะเบียนด้วยเลขบัตรนี้ (เช่นเจ้าหน้าที่ฌาปนกิจที่ไม่มีในทะเบียนบุคลากร)
+/// ไม่พบทั้งสองที่ = เปิดช่องชื่อ-สกุลให้ผู้ดูแลกรอกเองแล้วกดเพิ่มอีกครั้ง
 /// แก้เลขบัตรเมื่อไหร่ ช่องชื่อ-สกุลปิดไป (เลขใหม่ต้องตรวจกับ DPIS ก่อน)
 ///
 /// สิทธิ์มีผลตั้งแต่ผู้นั้นเข้าสู่ระบบครั้งถัดไป (backend ตรวจรายชื่อทุกครั้งที่เข้าสู่ระบบ)
@@ -31,7 +32,7 @@ class AdminUploadersScreen extends StatefulWidget {
   static const Key addKey = ValueKey('uploader-add');
   static const Key fullNameKey = ValueKey('uploader-fullname');
   static const Key notInDpisKey = ValueKey('uploader-not-in-dpis');
-  static Key manualTagKey(String id) => ValueKey('uploader-manual-$id');
+  static Key sourceTagKey(String id) => ValueKey('uploader-source-$id');
   static Key deleteKey(String id) => ValueKey('uploader-delete-$id');
 
   @override
@@ -168,7 +169,7 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
               'ผู้ที่นำแบบฟอร์มและทะเบียนคุมรายชื่อเข้าระบบได้ และดูรายงานฌาปนกิจได้',
           bullets: [
             'เพิ่มด้วยเลขบัตรประชาชน ระบบอ่านชื่อจากข้อมูลบุคลากร (DPIS)',
-            'ไม่พบใน DPIS (เช่นเจ้าหน้าที่ฌาปนกิจ) กรอกชื่อ-สกุลเองแล้วเพิ่มได้',
+            'ไม่พบใน DPIS (เช่นเจ้าหน้าที่ฌาปนกิจ) ใช้ชื่อจากบัญชีที่ลงทะเบียนแล้ว ถ้ายังไม่ลงทะเบียนให้กรอกชื่อ-สกุลเอง',
             'เพิ่ม/ลบแล้วมีผลเมื่อผู้นั้นเข้าสู่ระบบครั้งถัดไป',
           ],
         ),
@@ -266,8 +267,8 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                     key: AdminUploadersScreen.notInDpisKey,
                     type: NoticeType.warning,
                     text:
-                        'ไม่พบเลขบัตรนี้ในทะเบียนบุคลากร (DPIS) — ถ้าเป็นเจ้าหน้าที่ที่ไม่มีใน DPIS '
-                        'ให้กรอกชื่อ-สกุลแล้วกด "เพิ่ม" อีกครั้ง',
+                        'ไม่พบเลขบัตรนี้ในทะเบียนบุคลากร (DPIS) และยังไม่มีผู้ลงทะเบียนด้วยเลขบัตรนี้ — '
+                        'กรอกชื่อ-สกุลแล้วกด "เพิ่ม" อีกครั้ง',
                   ),
                 if (_addError != null)
                   NoticeBar(type: NoticeType.error, text: _addError!),
@@ -312,12 +313,19 @@ class _AdminUploadersScreenState extends State<AdminUploadersScreen> {
                                   weight: FontWeight.w600,
                                 ),
                               ),
-                              if (u.manualName)
+                              if (u.nameSource == Uploader.sourceAccount)
                                 StatusChip(
-                                  'ไม่พบใน DPIS',
+                                  'ชื่อจากบัญชีผู้ใช้',
+                                  AppTheme.infoColor,
+                                  icon: Icons.account_circle_outlined,
+                                  key: AdminUploadersScreen.sourceTagKey(u.id),
+                                )
+                              else if (u.nameSource == Uploader.sourceManual)
+                                StatusChip(
+                                  'กรอกชื่อเอง',
                                   AppTheme.warningColor,
                                   icon: Icons.edit_note,
-                                  key: AdminUploadersScreen.manualTagKey(u.id),
+                                  key: AdminUploadersScreen.sourceTagKey(u.id),
                                 ),
                             ],
                           ),
