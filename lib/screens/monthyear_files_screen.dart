@@ -247,6 +247,7 @@ class _MonthYearFilesScreenState extends State<MonthYearFilesScreen>
             key: ValueKey('monthyear-$_year-${months.join('_')}'),
             files: _files,
             showYearMonth: multi,
+            showFileFor: false,
             emptyText: multi
                 ? 'ไม่มีทะเบียนคุมรายชื่อของเดือนที่เลือก'
                 : 'ไม่มีทะเบียนคุมรายชื่อของเดือนนี้',

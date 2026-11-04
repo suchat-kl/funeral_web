@@ -125,6 +125,8 @@ void main() {
         expect(find.text('ทะเบียนคุม ส.ค. 69'), findsOneWidget);
         expect(find.text('ทะเบียนคุม ก.ย. 69 ลูกจ้าง'), findsOneWidget);
         expect(find.text('ปี-เดือน'), findsOneWidget);
+        // ทุกคนที่เข้าสู่ระบบเห็นทุกไฟล์ จึงไม่มีคอลัมน์ "สำหรับ"
+        expect(find.text('สำหรับ'), findsNothing);
 
         await tester.tap(find.byKey(const ValueKey('download-m3')));
         await tester.pumpAndSettle();
@@ -147,7 +149,9 @@ void main() {
       },
     );
 
-    testWidgets('เลือกทุกเดือนที่มีไฟล์ แล้วกลับเป็นเดือนเดียว', (tester) async {
+    testWidgets('เลือกทุกเดือนที่มีไฟล์ แล้วกลับเป็นเดือนเดียว', (
+      tester,
+    ) async {
       await setUpAs(tester, 'member1', 'Member@2569x');
       await pumpScreen(
         tester,
@@ -255,6 +259,9 @@ void main() {
           'yearMonth': '2569-09',
         });
         expect(find.text('ทะเบียนคุม ก.ย. 69 ข้าราชการ'), findsOneWidget);
+        // ทะเบียนคุมไม่มีช่อง/คอลัมน์แบบฟอร์มสำหรับ
+        expect(find.byType(FileForChips), findsNothing);
+        expect(find.text('สำหรับ'), findsNothing);
 
         next = PickedFile('reg.xlsx', Uint8List(10));
         await tapKey(tester, UploadFilesScreen.pickKey);
