@@ -14,11 +14,11 @@ import '../widgets/screen_parts.dart';
 import '../widgets/sheet_table.dart';
 import '../widgets/work_parts.dart';
 
-/// นำไฟล์เข้า › เพิ่มผู้ใช้งานทะเบียนคุม (ผู้ดูแล ผู้นำไฟล์เข้า) — ผู้ใช้สั่ง 5 พ.ย. 2569
+/// นำไฟล์เข้า › เพิ่มผู้ใช้งานทะเบียนคุม (ผู้ดูแล ผู้นำไฟล์เข้า) — ผู้ใช้สั่ง 5-6 พ.ย. 2569
 ///
-/// แสดงบัญชีประเภท U (ลงทะเบียนแบบไม่เป็นสมาชิกแล้วไม่พบใน DPIS) เรียงวันลงทะเบียนล่าสุดก่อน
-/// ค้นชื่อ นามสกุล เลขบัตร บางส่วนได้ แล้วเปลี่ยนเป็น N (ลูกจ้างประจำ เงินนอกงบประมาณ) ทีละราย
-/// ซึ่งทำให้ผู้นั้นใช้เมนูทะเบียนคุมรายชื่อได้
+/// แสดงทุกบัญชีที่ยังใช้เมนูทะเบียนคุมไม่ได้ (ไม่ใช่สมาชิก ไม่ใช่ผู้นำไฟล์เข้า/ผู้ดูแล ไม่มีบทบาท MONTHYEAR)
+/// เรียงวันลงทะเบียนล่าสุดก่อน ค้นชื่อ นามสกุล เลขบัตร บางส่วนได้ แล้วให้สิทธิ์ทีละราย:
+/// ประเภท U → เปลี่ยนเป็น N และให้บทบาทผู้ใช้ทะเบียนคุม; ประเภทอื่น (G/E/C/N) → ให้บทบาทอย่างเดียว
 /// มีเลขบัตรและชื่อ: อยู่ในหน่วยความจำของหน้าจอเท่านั้น เลขบัตรแสดงแบบปิดบางส่วน
 class ControlUsersScreen extends StatefulWidget {
   final ApiService apiService;
@@ -96,12 +96,22 @@ class _ControlUsersScreenState extends State<ControlUsersScreen> {
   String _nameOf(ControlUser u) =>
       u.fullName.isEmpty ? u.username : '${u.fullName} (${u.username})';
 
+  static bool _unknown(ControlUser u) => u.personType == PersonType.unknown;
+
+  /// ข้อความปุ่ม: ประเภท U ต้องเปลี่ยนประเภทด้วย
+  static String _grantLabel(ControlUser u) =>
+      _unknown(u) ? 'เปลี่ยนเป็น N + ให้สิทธิ์' : 'ให้สิทธิ์ทะเบียนคุม';
+
   Future<void> _grant(ControlUser u) async {
     final ok = await AppDialog.showConfirm(
       context,
-      'เปลี่ยน "${_nameOf(u)}" เป็น${PersonType.nameOf(PersonType.nonBudget)}?\n'
-      'ผู้นั้นจะใช้เมนูทะเบียนคุมรายชื่อได้ตั้งแต่เข้าสู่ระบบครั้งถัดไป',
-      confirmText: 'เปลี่ยนเป็น N',
+      _unknown(u)
+          ? 'เปลี่ยน "${_nameOf(u)}" เป็น${PersonType.nameOf(PersonType.nonBudget)} '
+                'และให้สิทธิ์ใช้เมนูทะเบียนคุม?\n'
+                'มีผลตั้งแต่ผู้นั้นเข้าสู่ระบบครั้งถัดไป'
+          : 'ให้สิทธิ์ใช้เมนูทะเบียนคุมแก่ "${_nameOf(u)}"?\n'
+                'ประเภทบุคลากรคงเดิม มีผลตั้งแต่ผู้นั้นเข้าสู่ระบบครั้งถัดไป',
+      confirmText: _grantLabel(u),
     );
     if (ok != true || !mounted) return;
     setState(() => _busyId = u.id);
@@ -109,7 +119,9 @@ class _ControlUsersScreenState extends State<ControlUsersScreen> {
       await widget.apiService.grantControlUser(u.id);
       if (!mounted) return;
       context.showSuccessSnackBar(
-        'เปลี่ยน ${u.username} เป็น${PersonType.nameOf(PersonType.nonBudget)}เรียบร้อย',
+        _unknown(u)
+            ? 'เปลี่ยน ${u.username} เป็น${PersonType.nameOf(PersonType.nonBudget)} และให้สิทธิ์ทะเบียนคุมเรียบร้อย'
+            : 'ให้สิทธิ์ทะเบียนคุมแก่ ${u.username} เรียบร้อย',
       );
     } catch (e) {
       if (mounted) context.showErrorSnackBar(e.toString());
@@ -160,8 +172,8 @@ class _ControlUsersScreenState extends State<ControlUsersScreen> {
             runSpacing: 4,
             children: [
               StatusChip(
-                'U ${PersonType.nameOf(u.personType)}',
-                AppTheme.warningColor,
+                '${u.personType ?? '-'} ${PersonType.nameOf(u.personType)}',
+                _unknown(u) ? AppTheme.warningColor : AppTheme.infoColor,
               ),
               if (!u.active) const StatusChip('ระงับ', AppTheme.dangerColor),
             ],
@@ -186,7 +198,7 @@ class _ControlUsersScreenState extends State<ControlUsersScreen> {
                     )
                   : const Icon(Icons.how_to_reg, size: 18),
               label: Text(
-                'เปลี่ยนเป็น N',
+                _grantLabel(u),
                 style: screenText(size: 13.5, color: Colors.white),
               ),
             ),
@@ -212,10 +224,11 @@ class _ControlUsersScreenState extends State<ControlUsersScreen> {
           icon: ControlUsersScreen.menuIcon,
           title: ControlUsersScreen.menuTitle,
           subtitle:
-              'ผู้ลงทะเบียนแบบไม่เป็นสมาชิกที่ไม่พบในข้อมูลบุคลากร (ประเภท U) เรียงตามวันลงทะเบียนล่าสุด',
+              'ผู้ใช้ที่ยังใช้เมนูทะเบียนคุมไม่ได้ (ไม่ใช่สมาชิกฌาปนกิจ) เรียงตามวันลงทะเบียนล่าสุด',
           bullets: [
-            'ตรวจว่าเป็นลูกจ้างประจำ เงินนอกงบประมาณ แล้วกด "เปลี่ยนเป็น N" ผู้นั้นจะใช้เมนูทะเบียนคุมรายชื่อได้',
-            'มีผลตั้งแต่ผู้นั้นเข้าสู่ระบบครั้งถัดไป',
+            'ประเภท U (ไม่พบในข้อมูลบุคลากร): ตรวจว่าเป็นลูกจ้างประจำ เงินนอกงบประมาณ แล้วกด "เปลี่ยนเป็น N + ให้สิทธิ์"',
+            'ประเภท G E C N: กด "ให้สิทธิ์ทะเบียนคุม" ประเภทบุคลากรคงเดิม',
+            'มีผลตั้งแต่ผู้นั้นเข้าสู่ระบบครั้งถัดไป ถอนสิทธิ์ได้ที่ ผู้ดูแล › ผู้ใช้ (บทบาทผู้ใช้ทะเบียนคุม)',
           ],
         ),
         const SizedBox(height: 14),
@@ -258,7 +271,7 @@ class _ControlUsersScreenState extends State<ControlUsersScreen> {
               child: SheetCard(
                 emptyText: _loading
                     ? 'กำลังโหลด...'
-                    : 'ไม่มีผู้ใช้ประเภท U ที่ตรงคำค้น',
+                    : 'ไม่มีผู้ใช้ที่ยังไม่มีสิทธิ์ทะเบียนคุมตรงคำค้น',
                 header: const Row(
                   children: [
                     Expanded(flex: 1, child: SheetHead('ลำดับ')),

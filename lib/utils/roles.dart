@@ -20,16 +20,26 @@ class Roles {
   /// ผู้ดูแลระบบ (ผู้ดูแลกำหนด) — ได้ UPLOADER ด้วยเสมอ แต่ไม่ได้ MEMBER
   static const String admin = 'ADMIN';
 
+  /// ผู้ใช้ทะเบียนคุม (ผู้ดูแล/ผู้นำไฟล์เข้ากำหนด) — ใช้เมนูทะเบียนคุมรายชื่อได้ แยกจากประเภทบุคลากร
+  static const String monthYear = 'MONTHYEAR';
+
   /// ชื่อภาษาไทยของบทบาทที่รู้จัก
   static const Map<String, String> names = {
     nonMember: 'ไม่ใช่สมาชิก',
     member: 'สมาชิกฌาปนกิจ',
     uploader: 'ผู้นำไฟล์เข้า',
+    monthYear: 'ผู้ใช้ทะเบียนคุม',
     admin: 'ผู้ดูแลระบบ',
   };
 
   /// ลำดับสิทธิ์จากสูงไปต่ำ ใช้เลือกบทบาทที่แสดงบนโปรไฟล์
-  static const List<String> order = [admin, uploader, member, nonMember];
+  static const List<String> order = [
+    admin,
+    uploader,
+    monthYear,
+    member,
+    nonMember,
+  ];
 
   /// ชื่อไทยของรหัสบทบาทใด ๆ (ตัด ROLE_ ให้ถ้ามี) ไม่รู้จัก = รหัสเดิม
   static String nameOf(String code) {
@@ -64,14 +74,7 @@ class MenuAccess {
   final bool loggedIn;
   final List<String> roles;
 
-  /// ประเภทบุคลากรของบัญชี ([PersonType]) ไม่ทราบ = null
-  final String? personType;
-
-  const MenuAccess({
-    required this.loggedIn,
-    required this.roles,
-    this.personType,
-  });
+  const MenuAccess({required this.loggedIn, required this.roles});
 
   bool _has(String r) => loggedIn && roles.contains(r);
 
@@ -84,10 +87,9 @@ class MenuAccess {
   /// ดาวน์โหลด › รายชื่อผู้เสียชีวิต / แบบฟอร์มทั่วไป — ทุกคน (ไม่ต้องเข้าสู่ระบบ)
   bool get generalFiles => true;
 
-  /// ดาวน์โหลด › ทะเบียนคุมรายชื่อ — ผู้ดูแล ผู้นำไฟล์เข้า และลูกจ้างประจำ เงินนอกงบประมาณ (N)
-  /// (ผู้ใช้สั่ง 5 พ.ย. 2569)
-  bool get monthYearFiles =>
-      isStaff || (loggedIn && personType == PersonType.nonBudget);
+  /// ดาวน์โหลด › ทะเบียนคุมรายชื่อ — ผู้ดูแล ผู้นำไฟล์เข้า สมาชิก และผู้มีบทบาท [Roles.monthYear]
+  /// (ผู้ใช้สั่ง 6 พ.ย. 2569: สิทธิ์แยกจากประเภทบุคลากร)
+  bool get monthYearFiles => isStaff || isMember || _has(Roles.monthYear);
 
   /// ดาวน์โหลด › ใบเสร็จรับเงิน (รายงวด) — สมาชิกเท่านั้น (ผู้นำไฟล์เข้า/ผู้ดูแลที่ไม่ใช่สมาชิก ซ่อนเมนู)
   bool get periodReceipts => isMember;
@@ -98,7 +100,7 @@ class MenuAccess {
   /// นำไฟล์เข้า › แบบฟอร์มทั่วไป / ทะเบียนคุมรายชื่อ / เอกสารหน้าแรก
   bool get upload => isStaff;
 
-  /// นำไฟล์เข้า › เพิ่มผู้ใช้งานทะเบียนคุม (เปลี่ยนประเภท U เป็น N) — ผู้ดูแล ผู้นำไฟล์เข้า
+  /// นำไฟล์เข้า › เพิ่มผู้ใช้งานทะเบียนคุม (ให้บทบาท [Roles.monthYear]) — ผู้ดูแล ผู้นำไฟล์เข้า
   bool get controlUsers => isStaff;
 
   /// รายงาน › ฌาปนกิจ-สลิป / ผู้เกษียณในรายการฌาปนกิจ
@@ -120,7 +122,7 @@ class PersonType {
   static const String emp = 'E';
   static const String other = 'C';
 
-  /// ลูกจ้างประจำ เงินนอกงบประมาณ (เช่น เจ้าหน้าที่ฌาปนกิจ) — ผู้ดูแล/ผู้นำไฟล์เข้าเปลี่ยนจาก [unknown]
+  /// ลูกจ้างประจำ เงินนอกงบประมาณ (เช่น เจ้าหน้าที่ฌาปนกิจ) — เปลี่ยนจาก [unknown] ตอนให้สิทธิ์ทะเบียนคุม
   static const String nonBudget = 'N';
 
   /// ไม่ทราบ (unknown) — ลงทะเบียนแบบไม่เป็นสมาชิกแล้วไม่พบใน DPIS รอเปลี่ยนเป็น [nonBudget]

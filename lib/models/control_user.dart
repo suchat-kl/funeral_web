@@ -1,6 +1,6 @@
 /// ผู้ใช้หนึ่งบัญชีในเมนูเพิ่มผู้ใช้งานทะเบียนคุม (`GET /api/upload/control-users`)
 ///
-/// บัญชีประเภท U (ลงทะเบียนแบบไม่เป็นสมาชิกแล้วไม่พบใน DPIS) รอเปลี่ยนเป็น N
+/// บัญชีที่ยังใช้เมนูทะเบียนคุมไม่ได้ (ไม่ใช่สมาชิก ไม่ใช่ผู้นำไฟล์เข้า/ผู้ดูแล ไม่มีบทบาท MONTHYEAR)
 /// มีเลขบัตรและชื่อ: อยู่ในหน่วยความจำของหน้าจอเท่านั้น ห้าม log
 class ControlUser {
   final String id;
@@ -10,6 +10,9 @@ class ControlUser {
   final String? personType;
   final String? source;
   final bool active;
+
+  /// ใช้เมนูทะเบียนคุมได้แล้ว (หลังให้สิทธิ์)
+  final bool monthYearAccess;
   final String? createdAt;
 
   const ControlUser({
@@ -20,6 +23,7 @@ class ControlUser {
     this.personType,
     this.source,
     this.active = true,
+    this.monthYearAccess = false,
     this.createdAt,
   });
 
@@ -31,6 +35,7 @@ class ControlUser {
     personType: j['personType']?.toString(),
     source: j['source']?.toString(),
     active: j['active'] != false,
+    monthYearAccess: j['monthYearAccess'] == true,
     createdAt: j['createdAt']?.toString(),
   );
 }
