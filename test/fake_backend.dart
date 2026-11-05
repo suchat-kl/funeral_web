@@ -44,6 +44,7 @@ class FakeUser {
   List<String> roles;
   bool mustChange;
   bool twoFactor;
+  final String createdAt;
 
   FakeUser({
     required this.id,
@@ -55,6 +56,7 @@ class FakeUser {
     required this.roles,
     this.mustChange = false,
     this.twoFactor = false,
+    this.createdAt = '2026-10-28T10:00:00',
   });
 }
 
@@ -118,6 +120,34 @@ class FakeBackend implements HttpClientAdapter {
       idcard: fakeIdcard('100000000006'),
       roles: ['NON_MEMBER'],
       mustChange: true,
+    ),
+    // ลูกจ้างประจำ เงินนอกงบประมาณ — ใช้เมนูทะเบียนคุมได้
+    'nonbudget1': FakeUser(
+      id: 'u-nb',
+      password: 'NonBudget@2569x',
+      fullName: 'ทดสอบ นอกงบ',
+      idcard: fakeIdcard('100000000007'),
+      personType: 'N',
+      roles: ['NON_MEMBER'],
+    ),
+    // ไม่พบใน DPIS (U) รอเปลี่ยนเป็น N — unknown2 ลงทะเบียนทีหลัง
+    'unknown1': FakeUser(
+      id: 'u-unk1',
+      password: 'Unknown@2569x',
+      fullName: 'ทดสอบ รอตรวจหนึ่ง',
+      idcard: fakeIdcard('100000000008'),
+      personType: 'U',
+      roles: ['NON_MEMBER'],
+      createdAt: '2026-11-04T09:00:00',
+    ),
+    'unknown2': FakeUser(
+      id: 'u-unk2',
+      password: 'Unknown@2569x',
+      fullName: 'สมหญิง รอตรวจสอง',
+      idcard: fakeIdcard('100000000009'),
+      personType: 'U',
+      roles: ['NON_MEMBER'],
+      createdAt: '2026-11-05T10:30:00',
     ),
   };
 
@@ -776,6 +806,13 @@ class FakeBackend implements HttpClientAdapter {
     // ───────── ต้องเข้าสู่ระบบตั้งแต่นี้ ─────────
     if (user == null) return unauth();
 
+    // ทะเบียนคุมรายชื่อ: ADMIN, UPLOADER, ประเภท N เท่านั้น
+    if (path.startsWith('/api/monthyear-files') &&
+        !has('UPLOADER') &&
+        !has('ADMIN') &&
+        user.personType != 'N') {
+      return forbidden();
+    }
     if (call == 'GET /api/monthyear-files/year-months') {
       return _json(200, monthYearFiles.keys.toList());
     }
@@ -797,6 +834,47 @@ class FakeBackend implements HttpClientAdapter {
     }
 
     // ───────── นำไฟล์เข้า ─────────
+    if (path.startsWith('/api/upload/control-users')) {
+      if (!has('UPLOADER') && !has('ADMIN')) return forbidden();
+      if (call == 'GET /api/upload/control-users') {
+        final words = '${options.queryParameters['q'] ?? ''}'
+            .trim()
+            .split(RegExp(r'\s+'))
+            .where((w) => w.isNotEmpty);
+        final rows = [
+          for (final e in users.entries)
+            if (e.value.personType == 'U' &&
+                words.every(
+                  (w) =>
+                      e.value.fullName.contains(w) ||
+                      e.value.idcard.contains(w),
+                ))
+              e,
+        ]..sort((a, b) => b.value.createdAt.compareTo(a.value.createdAt));
+        return _json(200, {
+          'users': [for (final e in rows) _controlDto(e.key, e.value)],
+          'limited': false,
+        });
+      }
+      final g = RegExp(
+        r'^/api/upload/control-users/([^/]+)/grant$',
+      ).firstMatch(path);
+      if (g != null && method == 'PUT') {
+        final e = users.entries
+            .where((x) => x.value.id == g.group(1))
+            .firstOrNull;
+        if (e == null) return _err(404, 'NOT_FOUND', 'ไม่พบผู้ใช้ที่ระบุ');
+        if (e.value.personType != 'U') {
+          return _err(
+            409,
+            'DUPLICATE',
+            'บัญชีนี้ไม่ใช่ประเภท U แล้ว กรุณาโหลดรายการใหม่',
+          );
+        }
+        e.value.personType = 'N';
+        return _json(200, _controlDto(e.key, e.value));
+      }
+    }
     final hd = RegExp(
       r'^/api/upload/home-documents/([A-Z]+)$',
     ).firstMatch(path);
@@ -1212,7 +1290,18 @@ class FakeBackend implements HttpClientAdapter {
     'twoFactorEnabled': u.twoFactor,
     'mustChangePassword': u.mustChange,
     'lastLogin': '2026-10-31T08:30:00',
-    'createdAt': '2026-10-28T10:00:00',
+    'createdAt': u.createdAt,
+  };
+
+  Map<String, dynamic> _controlDto(String username, FakeUser u) => {
+    'id': u.id,
+    'username': username,
+    'idcard': u.idcard,
+    'fullName': u.fullName,
+    'personType': u.personType,
+    'source': 'THAID',
+    'active': true,
+    'createdAt': u.createdAt,
   };
 }
 

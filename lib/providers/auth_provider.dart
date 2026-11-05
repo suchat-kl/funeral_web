@@ -26,7 +26,8 @@ class AuthProvider extends ChangeNotifier {
   bool hasRole(String role) => _api.hasRole(role);
 
   /// สิทธิ์เห็นเมนูของ session นี้
-  MenuAccess get access => MenuAccess(loggedIn: isLoggedIn, roles: roles);
+  MenuAccess get access =>
+      MenuAccess(loggedIn: isLoggedIn, roles: roles, personType: personType);
 
   bool get isMember => access.isMember;
   bool get isAdmin => access.isAdmin;

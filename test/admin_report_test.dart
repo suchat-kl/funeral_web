@@ -60,7 +60,7 @@ void main() {
           'size': 10,
         });
         expect(find.text('member1'), findsOneWidget);
-        expect(find.text('ทั้งหมด 6 บัญชี'), findsOneWidget);
+        expect(find.text('ทั้งหมด 9 บัญชี'), findsOneWidget);
         expect(textContaining(backend.users['member1']!.idcard), findsNothing);
 
         await tester.enterText(
@@ -86,6 +86,8 @@ void main() {
       // ประเภท N ลูกจ้างประจำ เงินนอกงบประมาณ เลือกได้
       expect(find.byKey(UserAdminDialog.personTypeKey('N')), findsOneWidget);
       expect(find.text('ลูกจ้างประจำ เงินนอกงบประมาณ'), findsOneWidget);
+      // ประเภท U ไม่ทราบ (ไม่พบใน DPIS) เลือกได้
+      expect(find.byKey(UserAdminDialog.personTypeKey('U')), findsOneWidget);
       await tapKey(tester, UserAdminDialog.personTypeKey('E'));
       await tapKey(tester, UserAdminDialog.roleKey('ADMIN'));
       await confirm(tester, 'บันทึก');

@@ -219,7 +219,7 @@ void main() {
   );
 
   testWidgets(
-    'ไม่เป็นสมาชิก: ThaID เท่านั้น ไม่พบใน DPIS ก็ลงทะเบียนได้ (ประเภท N)',
+    'ไม่เป็นสมาชิก: ThaID เท่านั้น ไม่พบใน DPIS ก็ลงทะเบียนได้ (ประเภท U)',
     (tester) async {
       await open(tester);
       thaid.state = 'st-x';
@@ -227,7 +227,7 @@ void main() {
       await tester.tap(find.byKey(RegisterDialog.nonMemberKey));
       await tester.pumpAndSettle();
       expect(find.byKey(RegisterDialog.legacyWayKey), findsNothing);
-      expect(textContaining('ลูกจ้างประจำ เงินนอกงบประมาณ'), findsOneWidget);
+      expect(textContaining('ไม่ทราบประเภท (U)'), findsOneWidget);
       await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
       await tester.pumpAndSettle();
       expect(

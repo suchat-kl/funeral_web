@@ -10,6 +10,7 @@ import '../screens/admin_users_screen.dart';
 import '../screens/cash_receipt_screen.dart';
 import '../screens/chapana_retired_screen.dart';
 import '../screens/chapana_slip_screen.dart';
+import '../screens/control_users_screen.dart';
 import '../screens/general_files_screen.dart';
 import '../screens/monthyear_files_screen.dart';
 import '../screens/receipt_period_screen.dart';
@@ -146,6 +147,13 @@ List<AppMenuGroup> buildAppMenu() {
             apiService: api(),
             kind: StoredFile.kindMonthYear,
           ),
+        ),
+        AppMenuItem(
+          id: 'control-users',
+          title: ControlUsersScreen.menuTitle,
+          icon: ControlUsersScreen.menuIcon,
+          visible: (a) => a.controlUsers,
+          screen: () => ControlUsersScreen(apiService: api()),
         ),
         AppMenuItem(
           id: 'upload-home-documents',
