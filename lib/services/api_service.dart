@@ -1200,7 +1200,7 @@ class ApiService {
   // เพิ่มผู้ใช้งานทะเบียนคุม (ADMIN, UPLOADER)
   // ===================================================================
 
-  /// บัญชีประเภท U เรียงวันสร้างใหม่ไปเก่า [keyword] ค้นชื่อ นามสกุล เลขบัตร บางส่วนได้ ห้าม log [keyword]
+  /// บัญชีที่ยังใช้เมนูทะเบียนคุมไม่ได้ เรียงวันสร้างใหม่ไปเก่า [keyword] ค้นชื่อ นามสกุล เลขบัตร บางส่วนได้ ห้าม log [keyword]
   Future<ControlUserList> getControlUsers({String? keyword}) async {
     final k = (keyword ?? '').trim();
     final r = await _authedRequest(
@@ -1214,7 +1214,7 @@ class ApiService {
     throw _apiError(r.statusCode, r.data, 'โหลดรายชื่อผู้ใช้ไม่สำเร็จ');
   }
 
-  /// เปลี่ยนประเภทบุคลากร U → N (ใช้เมนูทะเบียนคุมได้ตั้งแต่เข้าสู่ระบบครั้งถัดไป)
+  /// ให้บทบาท MONTHYEAR (ประเภท U เปลี่ยนเป็น N ด้วย) — ใช้เมนูทะเบียนคุมได้ตั้งแต่เข้าสู่ระบบครั้งถัดไป
   Future<ControlUser> grantControlUser(String id) async {
     final r = await _authedRequest(
       'PUT',
@@ -1223,7 +1223,7 @@ class ApiService {
     if (r.statusCode == 200 && r.data is Map) {
       return ControlUser.fromJson(Map<String, dynamic>.from(r.data));
     }
-    throw _apiError(r.statusCode, r.data, 'เปลี่ยนประเภทผู้ใช้ไม่สำเร็จ');
+    throw _apiError(r.statusCode, r.data, 'ให้สิทธิ์ทะเบียนคุมไม่สำเร็จ');
   }
 
   Future<List<SignatureItem>> getSignatures() async {

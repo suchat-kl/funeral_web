@@ -88,6 +88,8 @@ void main() {
       expect(find.text('ลูกจ้างประจำ เงินนอกงบประมาณ'), findsOneWidget);
       // ประเภท U ไม่ทราบ (ไม่พบใน DPIS) เลือกได้
       expect(find.byKey(UserAdminDialog.personTypeKey('U')), findsOneWidget);
+      // บทบาทผู้ใช้ทะเบียนคุมกำหนด/ถอนได้ที่นี่
+      expect(find.byKey(UserAdminDialog.roleKey('MONTHYEAR')), findsOneWidget);
       await tapKey(tester, UserAdminDialog.personTypeKey('E'));
       await tapKey(tester, UserAdminDialog.roleKey('ADMIN'));
       await confirm(tester, 'บันทึก');

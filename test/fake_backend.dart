@@ -121,14 +121,14 @@ class FakeBackend implements HttpClientAdapter {
       roles: ['NON_MEMBER'],
       mustChange: true,
     ),
-    // ลูกจ้างประจำ เงินนอกงบประมาณ — ใช้เมนูทะเบียนคุมได้
+    // ลูกจ้างประจำ เงินนอกงบประมาณ ได้บทบาทผู้ใช้ทะเบียนคุมแล้ว
     'nonbudget1': FakeUser(
       id: 'u-nb',
       password: 'NonBudget@2569x',
       fullName: 'ทดสอบ นอกงบ',
       idcard: fakeIdcard('100000000007'),
       personType: 'N',
-      roles: ['NON_MEMBER'],
+      roles: ['NON_MEMBER', 'MONTHYEAR'],
     ),
     // ไม่พบใน DPIS (U) รอเปลี่ยนเป็น N — unknown2 ลงทะเบียนทีหลัง
     'unknown1': FakeUser(
@@ -813,11 +813,9 @@ class FakeBackend implements HttpClientAdapter {
     // ───────── ต้องเข้าสู่ระบบตั้งแต่นี้ ─────────
     if (user == null) return unauth();
 
-    // ทะเบียนคุมรายชื่อ: ADMIN, UPLOADER, ประเภท N เท่านั้น
+    // ทะเบียนคุมรายชื่อ: ADMIN, UPLOADER, MEMBER, MONTHYEAR
     if (path.startsWith('/api/monthyear-files') &&
-        !has('UPLOADER') &&
-        !has('ADMIN') &&
-        user.personType != 'N') {
+        !['ADMIN', 'UPLOADER', 'MEMBER', 'MONTHYEAR'].any(has)) {
       return forbidden();
     }
     if (call == 'GET /api/monthyear-files/year-months') {
@@ -850,7 +848,9 @@ class FakeBackend implements HttpClientAdapter {
             .where((w) => w.isNotEmpty);
         final rows = [
           for (final e in users.entries)
-            if (e.value.personType == 'U' &&
+            if (!e.value.roles.any(
+                  ['ADMIN', 'UPLOADER', 'MEMBER', 'MONTHYEAR'].contains,
+                ) &&
                 words.every(
                   (w) =>
                       e.value.fullName.contains(w) ||
@@ -871,14 +871,17 @@ class FakeBackend implements HttpClientAdapter {
             .where((x) => x.value.id == g.group(1))
             .firstOrNull;
         if (e == null) return _err(404, 'NOT_FOUND', 'ไม่พบผู้ใช้ที่ระบุ');
-        if (e.value.personType != 'U') {
+        if (e.value.roles.any(
+          ['ADMIN', 'UPLOADER', 'MEMBER', 'MONTHYEAR'].contains,
+        )) {
           return _err(
             409,
             'DUPLICATE',
-            'บัญชีนี้ไม่ใช่ประเภท U แล้ว กรุณาโหลดรายการใหม่',
+            'บัญชีนี้ใช้เมนูทะเบียนคุมได้อยู่แล้ว กรุณาโหลดรายการใหม่',
           );
         }
-        e.value.personType = 'N';
+        if (e.value.personType == 'U') e.value.personType = 'N';
+        e.value.roles = [...e.value.roles, 'MONTHYEAR'];
         return _json(200, _controlDto(e.key, e.value));
       }
     }
@@ -1121,6 +1124,11 @@ class FakeBackend implements HttpClientAdapter {
             'description': 'ผู้นำไฟล์เข้าระบบ',
             'assignable': false,
           },
+          {
+            'name': 'MONTHYEAR',
+            'description': 'ผู้ใช้ทะเบียนคุม',
+            'assignable': true,
+          },
           {'name': 'ADMIN', 'description': 'ผู้ดูแลระบบ', 'assignable': true},
         ]);
       }
@@ -1158,7 +1166,10 @@ class FakeBackend implements HttpClientAdapter {
             if (method == 'PUT') {
               u.personType = body?['personType'] as String?;
               final assigned = List<String>.from(body?['assignedRoles'] ?? []);
-              u.roles = [...u.roles.where((r) => r != 'ADMIN'), ...assigned];
+              u.roles = [
+                ...u.roles.where((r) => r != 'ADMIN' && r != 'MONTHYEAR'),
+                ...assigned,
+              ];
               return _json(200, _userDto(entry.key, u));
             }
           case 'reset-password':
@@ -1295,7 +1306,10 @@ class FakeBackend implements HttpClientAdapter {
     'uploader': u.roles.contains('UPLOADER'),
     'personType': u.personType,
     'roles': u.roles,
-    'assignedRoles': [if (u.roles.contains('ADMIN')) 'ADMIN'],
+    'assignedRoles': [
+      for (final r in u.roles)
+        if (r == 'ADMIN' || r == 'MONTHYEAR') r,
+    ],
     'source': 'REGISTER',
     'active': true,
     'locked': false,
@@ -1313,6 +1327,8 @@ class FakeBackend implements HttpClientAdapter {
     'personType': u.personType,
     'source': 'THAID',
     'active': true,
+    'monthYearAccess': u.roles.contains('MONTHYEAR'),
+    'roles': u.roles,
     'createdAt': u.createdAt,
   };
 }

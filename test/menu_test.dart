@@ -15,11 +15,8 @@ void main() {
   logoutAfter();
 
   group('MenuAccess ตามตารางเมนูของข้อกำหนด', () {
-    MenuAccess a(
-      List<String> roles, {
-      bool loggedIn = true,
-      String? personType,
-    }) => MenuAccess(loggedIn: loggedIn, roles: roles, personType: personType);
+    MenuAccess a(List<String> roles, {bool loggedIn = true}) =>
+        MenuAccess(loggedIn: loggedIn, roles: roles);
 
     test('ไม่เข้าสู่ระบบ: เห็นเฉพาะแบบฟอร์มทั่วไป', () {
       final x = a(const [], loggedIn: false);
@@ -43,22 +40,19 @@ void main() {
       expect(x.account, isTrue);
     });
 
-    test('ทะเบียนคุม: ผู้ดูแล ผู้นำไฟล์เข้า และประเภท N เท่านั้น', () {
-      for (final t in ['G', 'E', 'C', 'U', null]) {
-        expect(a(const [Roles.member], personType: t).monthYearFiles, isFalse);
-        expect(
-          a(const [Roles.nonMember], personType: t).monthYearFiles,
-          isFalse,
-        );
-      }
-      final n = a(const [Roles.nonMember], personType: PersonType.nonBudget);
-      expect(n.monthYearFiles, isTrue);
-      expect(n.controlUsers, isFalse);
+    test('ทะเบียนคุม: ผู้ดูแล ผู้นำไฟล์เข้า สมาชิก และบทบาท MONTHYEAR', () {
+      expect(a(const [Roles.member]).monthYearFiles, isTrue);
+      expect(a(const [Roles.member]).controlUsers, isFalse);
+      expect(a(const [Roles.nonMember]).monthYearFiles, isFalse);
+      final g = a(const [Roles.nonMember, Roles.monthYear]);
+      expect(g.monthYearFiles, isTrue);
+      expect(g.controlUsers, isFalse);
       expect(
-        a(const [], loggedIn: false, personType: 'N').monthYearFiles,
+        a(const [Roles.monthYear], loggedIn: false).monthYearFiles,
         isFalse,
       );
-      expect(a(const [Roles.uploader], personType: 'G').monthYearFiles, isTrue);
+      expect(Roles.nameOf('MONTHYEAR'), 'ผู้ใช้ทะเบียนคุม');
+      expect(a(const [Roles.uploader]).monthYearFiles, isTrue);
       expect(a(const [Roles.uploader]).controlUsers, isTrue);
       expect(a(const [Roles.admin]).monthYearFiles, isTrue);
       expect(a(const [Roles.admin]).controlUsers, isTrue);
@@ -191,9 +185,7 @@ void main() {
       });
     });
 
-    testWidgets('ลูกจ้างประจำ เงินนอกงบประมาณ (N): เห็นทะเบียนคุม', (
-      tester,
-    ) async {
+    testWidgets('มีบทบาทผู้ใช้ทะเบียนคุม: เห็นทะเบียนคุม', (tester) async {
       await openMenu(tester, 'nonbudget1', 'NonBudget@2569x');
       expectItems({
         'deceased-files',
@@ -219,6 +211,7 @@ void main() {
       expectItems({
         'deceased-files',
         'general-files',
+        'monthyear-files',
         'receipt-period',
         'receipt-cash',
         'change-password',
