@@ -549,7 +549,8 @@ class ApiService {
   }
 
   /// ลงทะเบียนผ่าน ThaID ([mode] = [registerModeMember] / [registerModeNonMember]) ได้ใบผ่าน
-  /// code ที่เป็นไปได้: NOT_MEMBER, NOT_IN_DPIS, ALREADY_REGISTERED, THAID_ERROR, TOO_MANY_REQUESTS
+  /// code ที่เป็นไปได้: NOT_MEMBER, ALREADY_REGISTERED, THAID_ERROR, TOO_MANY_REQUESTS, DPIS_ERROR
+  /// (NOT_IN_DPIS เลิกใช้ 5 พ.ย. 2569: ไม่พบใน DPIS ลงทะเบียนได้เป็นประเภท N)
   Future<RegisterTicket> thaidRegister(String state, String mode) async {
     final r = await _publicPost('/api/auth/public-thaid/register', {
       'state': state,

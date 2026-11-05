@@ -219,7 +219,7 @@ void main() {
   );
 
   testWidgets(
-    'ไม่เป็นสมาชิก: ThaID เท่านั้น ไม่พบใน DPIS (NOT_IN_DPIS) แสดงข้อความ',
+    'ไม่เป็นสมาชิก: ThaID เท่านั้น ไม่พบใน DPIS ก็ลงทะเบียนได้ (ประเภท N)',
     (tester) async {
       await open(tester);
       thaid.state = 'st-x';
@@ -227,9 +227,15 @@ void main() {
       await tester.tap(find.byKey(RegisterDialog.nonMemberKey));
       await tester.pumpAndSettle();
       expect(find.byKey(RegisterDialog.legacyWayKey), findsNothing);
+      expect(textContaining('ลูกจ้างประจำ เงินนอกงบประมาณ'), findsOneWidget);
       await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
       await tester.pumpAndSettle();
-      expect(find.text('ไม่พบข้อมูลบุคลากรของเลขบัตรนี้'), findsOneWidget);
+      expect(
+        backend.bodyOf('POST /api/auth/public-thaid/register')!['mode'],
+        'NON_MEMBER',
+      );
+      await fillAccount(tester, username: 'nonbudget01');
+      expect(result?.username, 'nonbudget01');
     },
   );
 

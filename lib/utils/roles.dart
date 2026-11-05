@@ -99,7 +99,8 @@ class MenuAccess {
   bool get account => loggedIn;
 }
 
-/// ประเภทบุคลากร (`G` ข้าราชการ / `E` ลูกจ้างประจำ / `C` อื่น ๆ) ไม่ทราบ = null
+/// ประเภทบุคลากร (`G` ข้าราชการ / `E` ลูกจ้างประจำ / `C` อื่น ๆ /
+/// `N` ลูกจ้างประจำ เงินนอกงบประมาณ — ไม่อยู่ใน DPIS) ไม่ทราบ = null
 class PersonType {
   PersonType._();
 
@@ -107,10 +108,14 @@ class PersonType {
   static const String emp = 'E';
   static const String other = 'C';
 
+  /// ลูกจ้างประจำ เงินนอกงบประมาณ (เช่น เจ้าหน้าที่ฌาปนกิจ) ลงทะเบียนแบบไม่เป็นสมาชิกแล้วไม่พบใน DPIS
+  static const String nonBudget = 'N';
+
   static const Map<String, String> names = {
     gov: 'ข้าราชการ',
     emp: 'ลูกจ้างประจำ',
     other: 'พนักงานราชการ/อื่น ๆ',
+    nonBudget: 'ลูกจ้างประจำ เงินนอกงบประมาณ',
   };
 
   /// รหัสที่รู้จัก (ตัวพิมพ์ใหญ่) ว่าง/ไม่รู้จัก = null
