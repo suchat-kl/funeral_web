@@ -154,11 +154,13 @@ class _FileTableState extends State<FileTable> {
               ],
             ),
             rows: [
-              for (final f in rows)
+              for (final (i, f) in rows.indexed)
                 Row(
                   key: FileTable.rowKey(f.id),
                   children: [
-                    _cell(f.num > 0 ? '${f.num}' : '-', 1),
+                    // ลำดับนับจากแถวในรายการ (ล่างสุด = 1, บนสุด = จำนวนทั้งหมด) ไม่ใช้ num
+                    // เพราะ num ยกมาจากระบบเดิม เลขกระโดดและใช้จับคู่ตอนซิงก์ (ผู้ใช้สั่ง 5 พ.ย. 2569)
+                    _cell('${list.length - (start + i)}', 1),
                     _cell(f.typeFile.isEmpty ? '-' : f.typeFile, 2),
                     _cell(f.title, 6, bold: true),
                     if (widget.showYearMonth) _cell(f.yearMonth ?? '-', 2),
