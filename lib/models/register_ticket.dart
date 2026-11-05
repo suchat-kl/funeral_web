@@ -1,6 +1,8 @@
+import '../utils/roles.dart';
+
 /// ใบผ่านลงทะเบียน: ผลของขั้นที่ 2 (ตรวจแบบเดิม หรือยืนยัน ThaID) ใช้ตั้งชื่อผู้ใช้/รหัสผ่านในขั้นที่ 3
 ///
-/// `{ticket, full_name, member, member_no, expires_in}` จาก
+/// `{ticket, full_name, member, member_no, person_type, expires_in}` จาก
 /// `POST /api/public/register/legacy-verify` และ `POST /api/auth/public-thaid/register`
 ///
 /// มีชื่อและเลขสมาชิก: อยู่ในหน่วยความจำของหน้าต่างลงทะเบียนเท่านั้น ห้าม log ห้ามเก็บลงที่เก็บของเบราว์เซอร์
@@ -12,6 +14,9 @@ class RegisterTicket {
   final bool member;
   final String? memberNo;
 
+  /// ประเภทบุคลากรที่บัญชีจะได้ (`U` = ไม่พบใน DPIS ต้องติดต่องานฌาปนกิจเพื่อขอใช้ทะเบียนคุม)
+  final String? personType;
+
   /// อายุของใบผ่าน (วินาที)
   final int expiresIn;
 
@@ -20,6 +25,7 @@ class RegisterTicket {
     required this.fullName,
     required this.member,
     this.memberNo,
+    this.personType,
     this.expiresIn = 0,
   });
 
@@ -31,6 +37,7 @@ class RegisterTicket {
       fullName: '${j['full_name'] ?? ''}'.trim(),
       member: j['member'] == true,
       memberNo: no.isEmpty ? null : no,
+      personType: PersonType.normalize(j['person_type']),
       expiresIn: exp is num ? exp.toInt() : int.tryParse('${exp ?? ''}') ?? 0,
     );
   }

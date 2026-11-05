@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../config/theme.dart';
 import '../models/register_ticket.dart';
 import '../services/api_service.dart';
+import '../utils/roles.dart';
 import '../utils/thaid.dart';
 import '../utils/util.dart';
 import 'account_form.dart';
@@ -46,6 +47,10 @@ enum MemberWay { legacy, thaid }
 ///   ใบผ่านหมดอายุ (REGISTER_TICKET_INVALID) ต้องเริ่มใหม่ เลขบัตรมีบัญชีแล้ว (ALREADY_REGISTERED) ชวนไปลืมรหัสผ่าน
 ///
 /// ใบผ่าน ชื่อ เลขบัตร อยู่ใน state ของหน้าต่างนี้เท่านั้น ไม่ log ไม่เก็บลงที่เก็บของเบราว์เซอร์
+/// ข้อความแจ้งผู้ที่จะได้ประเภท U (ผู้ใช้สั่ง 5 พ.ย. 2569)
+const String unknownContactText =
+    'หากต้องการดาวน์โหลดทะเบียนคุมรายชื่อ ให้ติดต่องานฌาปนกิจ (โทร 25142)';
+
 class RegisterDialog extends StatefulWidget {
   final ApiService apiService;
 
@@ -69,6 +74,7 @@ class RegisterDialog extends StatefulWidget {
   static const Key usernameKey = ValueKey('register-username');
   static const Key submitKey = ValueKey('register-submit');
   static const Key verifiedKey = ValueKey('register-verified');
+  static const Key unknownContactKey = ValueKey('register-unknown-contact');
   static const Key alreadyKey = ValueKey('register-already');
   static const Key goForgotKey = ValueKey('register-go-forgot');
   static const Key goNonMemberKey = ValueKey('register-go-non-member');
@@ -539,8 +545,8 @@ class _RegisterDialogState extends State<RegisterDialog> {
           ? 'กดปุ่มด้านล่างแล้วสแกน QR ด้วยแอป ThaID ระบบจะตรวจเลขบัตรของท่านกับทะเบียนสมาชิกฌาปนกิจ'
           : 'ผู้ที่ไม่ได้เป็นสมาชิกลงทะเบียนได้ด้วย ThaID เท่านั้น ระบบจะตรวจเลขบัตรกับข้อมูลบุคลากรกรมทางหลวง '
                 'เพื่อกำหนดประเภทบุคลากร (ถ้าไม่พบ ระบบตั้งเป็นไม่ทราบประเภท (U) '
-                'รอผู้ดูแลระบบตรวจสอบก่อนใช้เมนูทะเบียนคุม '
-                'และถ้าพบในทะเบียนสมาชิกด้วย ระบบตั้งเป็นสมาชิกให้)',
+                'และถ้าพบในทะเบียนสมาชิกด้วย ระบบตั้งเป็นสมาชิกให้) '
+                '$unknownContactText',
     ),
     const SizedBox(height: 16),
     SizedBox(
@@ -627,6 +633,16 @@ class _RegisterDialogState extends State<RegisterDialog> {
           ],
         ),
       ),
+      if (t.personType == PersonType.unknown) ...[
+        const SizedBox(height: 10),
+        Container(
+          key: RegisterDialog.unknownContactKey,
+          child: AccountBanner.info(
+            'ไม่พบท่านในข้อมูลบุคลากรกรมทางหลวง ระบบตั้งประเภทบุคลากรเป็นไม่ทราบประเภท (U) '
+            '$unknownContactText',
+          ),
+        ),
+      ],
       const SizedBox(height: 8),
       Text(
         'ตั้งชื่อผู้ใช้และรหัสผ่านให้เสร็จ${minutes == null ? 'ภายในเวลาที่กำหนด' : 'ภายใน $minutes นาที'} '
