@@ -112,7 +112,7 @@ void main() {
         for (var i = 1; i <= 12; i++)
           {
             'id': 'x$i',
-            'num': i,
+            'num': 100 + i * 3,
             'typeFile': 'แบบฟอร์ม',
             'title': 'แบบทดสอบลำดับ $i',
             'fileName': 'f$i.pdf',
@@ -124,6 +124,23 @@ void main() {
       expect(find.text('ทั้งหมด 12 รายการ'), findsOneWidget);
       expect(find.byKey(FileTable.rowKey('x10')), findsOneWidget);
       expect(find.byKey(FileTable.rowKey('x11')), findsNothing);
+
+      // ลำดับนับจากแถว ไม่ใช่ num: แถวแรก = 12, แถวสุดท้ายของรายการ = 1
+      String order(String id) =>
+          (tester
+                  .widgetList<Text>(
+                    find.descendant(
+                      of: find.byKey(FileTable.rowKey(id)),
+                      matching: find.byType(Text),
+                    ),
+                  )
+                  .first)
+              .data!;
+      expect(order('x1'), '12');
+      expect(order('x10'), '3');
+      await tester.tap(find.text('2').last);
+      await tester.pumpAndSettle();
+      expect(order('x12'), '1');
     });
   });
 
