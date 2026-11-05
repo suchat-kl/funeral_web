@@ -64,7 +64,14 @@ class MenuAccess {
   final bool loggedIn;
   final List<String> roles;
 
-  const MenuAccess({required this.loggedIn, required this.roles});
+  /// ประเภทบุคลากรของบัญชี ([PersonType]) ไม่ทราบ = null
+  final String? personType;
+
+  const MenuAccess({
+    required this.loggedIn,
+    required this.roles,
+    this.personType,
+  });
 
   bool _has(String r) => loggedIn && roles.contains(r);
 
@@ -77,8 +84,10 @@ class MenuAccess {
   /// ดาวน์โหลด › รายชื่อผู้เสียชีวิต / แบบฟอร์มทั่วไป — ทุกคน (ไม่ต้องเข้าสู่ระบบ)
   bool get generalFiles => true;
 
-  /// ดาวน์โหลด › ทะเบียนคุมรายชื่อ — ทุกคนที่เข้าสู่ระบบ
-  bool get monthYearFiles => loggedIn;
+  /// ดาวน์โหลด › ทะเบียนคุมรายชื่อ — ผู้ดูแล ผู้นำไฟล์เข้า และลูกจ้างประจำ เงินนอกงบประมาณ (N)
+  /// (ผู้ใช้สั่ง 5 พ.ย. 2569)
+  bool get monthYearFiles =>
+      isStaff || (loggedIn && personType == PersonType.nonBudget);
 
   /// ดาวน์โหลด › ใบเสร็จรับเงิน (รายงวด) — สมาชิกเท่านั้น (ผู้นำไฟล์เข้า/ผู้ดูแลที่ไม่ใช่สมาชิก ซ่อนเมนู)
   bool get periodReceipts => isMember;
@@ -88,6 +97,9 @@ class MenuAccess {
 
   /// นำไฟล์เข้า › แบบฟอร์มทั่วไป / ทะเบียนคุมรายชื่อ / เอกสารหน้าแรก
   bool get upload => isStaff;
+
+  /// นำไฟล์เข้า › เพิ่มผู้ใช้งานทะเบียนคุม (เปลี่ยนประเภท U เป็น N) — ผู้ดูแล ผู้นำไฟล์เข้า
+  bool get controlUsers => isStaff;
 
   /// รายงาน › ฌาปนกิจ-สลิป / ผู้เกษียณในรายการฌาปนกิจ
   bool get reports => isStaff;
@@ -100,7 +112,7 @@ class MenuAccess {
 }
 
 /// ประเภทบุคลากร (`G` ข้าราชการ / `E` ลูกจ้างประจำ / `C` อื่น ๆ /
-/// `N` ลูกจ้างประจำ เงินนอกงบประมาณ — ไม่อยู่ใน DPIS) ไม่ทราบ = null
+/// `N` ลูกจ้างประจำ เงินนอกงบประมาณ / `U` ไม่ทราบ — ไม่พบใน DPIS รอเปลี่ยนเป็น N) ไม่ทราบ = null
 class PersonType {
   PersonType._();
 
@@ -108,14 +120,18 @@ class PersonType {
   static const String emp = 'E';
   static const String other = 'C';
 
-  /// ลูกจ้างประจำ เงินนอกงบประมาณ (เช่น เจ้าหน้าที่ฌาปนกิจ) ลงทะเบียนแบบไม่เป็นสมาชิกแล้วไม่พบใน DPIS
+  /// ลูกจ้างประจำ เงินนอกงบประมาณ (เช่น เจ้าหน้าที่ฌาปนกิจ) — ผู้ดูแล/ผู้นำไฟล์เข้าเปลี่ยนจาก [unknown]
   static const String nonBudget = 'N';
+
+  /// ไม่ทราบ (unknown) — ลงทะเบียนแบบไม่เป็นสมาชิกแล้วไม่พบใน DPIS รอเปลี่ยนเป็น [nonBudget]
+  static const String unknown = 'U';
 
   static const Map<String, String> names = {
     gov: 'ข้าราชการ',
     emp: 'ลูกจ้างประจำ',
     other: 'พนักงานราชการ/อื่น ๆ',
     nonBudget: 'ลูกจ้างประจำ เงินนอกงบประมาณ',
+    unknown: 'ไม่ทราบประเภท (ไม่พบใน DPIS)',
   };
 
   /// รหัสที่รู้จัก (ตัวพิมพ์ใหญ่) ว่าง/ไม่รู้จัก = null

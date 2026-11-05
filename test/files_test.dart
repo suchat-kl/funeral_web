@@ -148,7 +148,7 @@ void main() {
     testWidgets(
       'เปิดมาที่เดือนล่าสุดที่มีไฟล์ เปลี่ยนเดือนแล้วโหลดใหม่ ดาวน์โหลดได้',
       (tester) async {
-        await setUpAs(tester, 'nonmember1', 'NonMember@2569x');
+        await setUpAs(tester, 'nonbudget1', 'NonBudget@2569x');
         await pumpScreen(
           tester,
           MonthYearFilesScreen(apiService: ApiService(), today: today),
@@ -196,7 +196,7 @@ void main() {
     testWidgets('เลือกทุกเดือนที่มีไฟล์ แล้วกลับเป็นเดือนเดียว', (
       tester,
     ) async {
-      await setUpAs(tester, 'member1', 'Member@2569x');
+      await setUpAs(tester, 'nonbudget1', 'NonBudget@2569x');
       await pumpScreen(
         tester,
         MonthYearFilesScreen(apiService: ApiService(), today: today),
@@ -213,7 +213,7 @@ void main() {
     });
 
     testWidgets('เดือนที่ไม่มีไฟล์: แสดงข้อความว่าง', (tester) async {
-      await setUpAs(tester, 'member1', 'Member@2569x');
+      await setUpAs(tester, 'nonbudget1', 'NonBudget@2569x');
       await pumpScreen(
         tester,
         MonthYearFilesScreen(apiService: ApiService(), today: today),

@@ -15,8 +15,11 @@ void main() {
   logoutAfter();
 
   group('MenuAccess ตามตารางเมนูของข้อกำหนด', () {
-    MenuAccess a(List<String> roles, {bool loggedIn = true}) =>
-        MenuAccess(loggedIn: loggedIn, roles: roles);
+    MenuAccess a(
+      List<String> roles, {
+      bool loggedIn = true,
+      String? personType,
+    }) => MenuAccess(loggedIn: loggedIn, roles: roles, personType: personType);
 
     test('ไม่เข้าสู่ระบบ: เห็นเฉพาะแบบฟอร์มทั่วไป', () {
       final x = a(const [], loggedIn: false);
@@ -30,13 +33,35 @@ void main() {
       expect(x.account, isFalse);
     });
 
-    test('ไม่ใช่สมาชิก: แบบฟอร์ม + ทะเบียนคุม + บัญชี ไม่มีใบเสร็จ', () {
+    test('ไม่ใช่สมาชิก: แบบฟอร์ม + บัญชี ไม่มีทะเบียนคุม ไม่มีใบเสร็จ', () {
       final x = a(const [Roles.nonMember]);
-      expect(x.monthYearFiles, isTrue);
+      expect(x.monthYearFiles, isFalse);
+      expect(x.controlUsers, isFalse);
       expect(x.periodReceipts, isFalse);
       expect(x.cashReceipts, isFalse);
       expect(x.upload, isFalse);
       expect(x.account, isTrue);
+    });
+
+    test('ทะเบียนคุม: ผู้ดูแล ผู้นำไฟล์เข้า และประเภท N เท่านั้น', () {
+      for (final t in ['G', 'E', 'C', 'U', null]) {
+        expect(a(const [Roles.member], personType: t).monthYearFiles, isFalse);
+        expect(
+          a(const [Roles.nonMember], personType: t).monthYearFiles,
+          isFalse,
+        );
+      }
+      final n = a(const [Roles.nonMember], personType: PersonType.nonBudget);
+      expect(n.monthYearFiles, isTrue);
+      expect(n.controlUsers, isFalse);
+      expect(
+        a(const [], loggedIn: false, personType: 'N').monthYearFiles,
+        isFalse,
+      );
+      expect(a(const [Roles.uploader], personType: 'G').monthYearFiles, isTrue);
+      expect(a(const [Roles.uploader]).controlUsers, isTrue);
+      expect(a(const [Roles.admin]).monthYearFiles, isTrue);
+      expect(a(const [Roles.admin]).controlUsers, isTrue);
     });
 
     test('สมาชิก: ใบเสร็จทั้งสองแบบ ไม่มีนำไฟล์เข้า/รายงาน/ผู้ดูแล', () {
@@ -123,6 +148,7 @@ void main() {
         'receipt-cash',
         'upload-general',
         'upload-monthyear',
+        'control-users',
         'upload-home-documents',
         'report-slip',
         'report-retired',
@@ -160,7 +186,29 @@ void main() {
       expectItems({
         'deceased-files',
         'general-files',
+        'change-password',
+        'two-factor',
+      });
+    });
+
+    testWidgets('ลูกจ้างประจำ เงินนอกงบประมาณ (N): เห็นทะเบียนคุม', (
+      tester,
+    ) async {
+      await openMenu(tester, 'nonbudget1', 'NonBudget@2569x');
+      expectItems({
+        'deceased-files',
+        'general-files',
         'monthyear-files',
+        'change-password',
+        'two-factor',
+      });
+    });
+
+    testWidgets('ไม่ทราบประเภท (U): ไม่เห็นทะเบียนคุม', (tester) async {
+      await openMenu(tester, 'unknown1', 'Unknown@2569x');
+      expectItems({
+        'deceased-files',
+        'general-files',
         'change-password',
         'two-factor',
       });
@@ -171,7 +219,6 @@ void main() {
       expectItems({
         'deceased-files',
         'general-files',
-        'monthyear-files',
         'receipt-period',
         'receipt-cash',
         'change-password',
@@ -189,6 +236,7 @@ void main() {
         'receipt-cash',
         'upload-general',
         'upload-monthyear',
+        'control-users',
         'upload-home-documents',
         'report-slip',
         'report-retired',
@@ -206,6 +254,7 @@ void main() {
         'receipt-cash',
         'upload-general',
         'upload-monthyear',
+        'control-users',
         'upload-home-documents',
         'report-slip',
         'report-retired',
@@ -219,7 +268,7 @@ void main() {
     });
 
     testWidgets('กดเมนูแล้วเปิดหน้าจอ (ทะเบียนคุมรายชื่อ)', (tester) async {
-      await openMenu(tester, 'member1', 'Member@2569x');
+      await openMenu(tester, 'nonbudget1', 'NonBudget@2569x');
       await tester.tap(find.byKey(AppMenuItem.keyOf('monthyear-files')));
       await tester.pumpAndSettle();
       expect(
