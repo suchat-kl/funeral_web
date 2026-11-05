@@ -706,8 +706,15 @@ class FakeBackend implements HttpClientAdapter {
       if (mode == 'MEMBER' && memberNo == null) {
         return _err(400, 'NOT_MEMBER', 'ไม่พบเลขบัตรในทะเบียนสมาชิกฌาปนกิจ');
       }
-      // ไม่เป็นสมาชิกแล้วไม่พบใน DPIS = ลงทะเบียนได้เป็นประเภท N (backend ตั้งให้)
-      return _json(200, _ticket(r.idcard, memberNo));
+      // ไม่เป็นสมาชิกแล้วไม่พบใน DPIS = ลงทะเบียนได้เป็นประเภท U (backend ตั้งให้)
+      return _json(
+        200,
+        _ticket(
+          r.idcard,
+          memberNo,
+          personType: dpis.contains(r.idcard) ? 'G' : 'U',
+        ),
+      );
     }
 
     // ───────── ลงทะเบียน ─────────
@@ -1261,7 +1268,11 @@ class FakeBackend implements HttpClientAdapter {
     return _err(404, 'NOT_FOUND', 'ไม่พบเส้น $call (fake)');
   }
 
-  Map<String, dynamic> _ticket(String idcard, String? memberNo) {
+  Map<String, dynamic> _ticket(
+    String idcard,
+    String? memberNo, {
+    String? personType,
+  }) {
     final t = 'ticket-${++_serial}-xxxxxxxx';
     tickets[t] = (idcard, memberNo);
     return {
@@ -1269,6 +1280,7 @@ class FakeBackend implements HttpClientAdapter {
       'full_name': 'ทดสอบ ยืนยันแล้ว',
       'member': memberNo != null,
       'member_no': memberNo,
+      'person_type': personType,
       'expires_in': 900,
     };
   }

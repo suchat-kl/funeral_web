@@ -184,6 +184,7 @@ void main() {
         'state': 'st-reg',
         'mode': 'MEMBER',
       });
+      expect(find.byKey(RegisterDialog.unknownContactKey), findsNothing);
       await fillAccount(tester, username: 'tester.two');
       expect(result?.username, 'tester.two');
     },
@@ -228,12 +229,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(RegisterDialog.legacyWayKey), findsNothing);
       expect(textContaining('ไม่ทราบประเภท (U)'), findsOneWidget);
+      expect(textContaining('โทร 25142'), findsOneWidget);
       await tester.tap(find.byKey(RegisterDialog.thaidButtonKey));
       await tester.pumpAndSettle();
       expect(
         backend.bodyOf('POST /api/auth/public-thaid/register')!['mode'],
         'NON_MEMBER',
       );
+      // ขั้นตั้งชื่อผู้ใช้: แจ้งว่าได้ประเภท U และให้ติดต่องานฌาปนกิจ
+      expect(find.byKey(RegisterDialog.unknownContactKey), findsOneWidget);
+      expect(textContaining('ติดต่องานฌาปนกิจ (โทร 25142)'), findsOneWidget);
       await fillAccount(tester, username: 'nonbudget01');
       expect(result?.username, 'nonbudget01');
     },
