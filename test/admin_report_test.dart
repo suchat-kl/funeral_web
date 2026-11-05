@@ -83,6 +83,9 @@ void main() {
       expect(find.byType(UserAdminDialog), findsOneWidget);
       // เลขบัตรแบบปิดบางส่วน
       expect(textContaining('xxxx'), findsWidgets);
+      // ประเภท N ลูกจ้างประจำ เงินนอกงบประมาณ เลือกได้
+      expect(find.byKey(UserAdminDialog.personTypeKey('N')), findsOneWidget);
+      expect(find.text('ลูกจ้างประจำ เงินนอกงบประมาณ'), findsOneWidget);
       await tapKey(tester, UserAdminDialog.personTypeKey('E'));
       await tapKey(tester, UserAdminDialog.roleKey('ADMIN'));
       await confirm(tester, 'บันทึก');

@@ -676,9 +676,7 @@ class FakeBackend implements HttpClientAdapter {
       if (mode == 'MEMBER' && memberNo == null) {
         return _err(400, 'NOT_MEMBER', 'ไม่พบเลขบัตรในทะเบียนสมาชิกฌาปนกิจ');
       }
-      if (mode == 'NON_MEMBER' && !dpis.contains(r.idcard)) {
-        return _err(400, 'NOT_IN_DPIS', 'ไม่พบข้อมูลบุคลากรของเลขบัตรนี้');
-      }
+      // ไม่เป็นสมาชิกแล้วไม่พบใน DPIS = ลงทะเบียนได้เป็นประเภท N (backend ตั้งให้)
       return _json(200, _ticket(r.idcard, memberNo));
     }
 
