@@ -23,18 +23,23 @@ class Roles {
   /// ผู้ใช้ทะเบียนคุม (ผู้ดูแล/ผู้นำไฟล์เข้ากำหนด) — ใช้เมนูทะเบียนคุมรายชื่อได้ แยกจากประเภทบุคลากร
   static const String monthYear = 'MONTHYEAR';
 
+  /// เจ้าหน้าที่รับฝากเงินล่วงหน้า (ผู้ดูแลกำหนด) — คนละคนกับผู้นำไฟล์เข้า ADMIN ได้บทบาทนี้อัตโนมัติ
+  static const String depositStaff = 'DEPOSIT_STAFF';
+
   /// ชื่อภาษาไทยของบทบาทที่รู้จัก
   static const Map<String, String> names = {
     nonMember: 'ไม่ใช่สมาชิก',
     member: 'สมาชิกฌาปนกิจ',
     uploader: 'ผู้นำไฟล์เข้า',
     monthYear: 'ผู้ใช้ทะเบียนคุม',
+    depositStaff: 'เจ้าหน้าที่รับฝากเงินล่วงหน้า',
     admin: 'ผู้ดูแลระบบ',
   };
 
   /// ลำดับสิทธิ์จากสูงไปต่ำ ใช้เลือกบทบาทที่แสดงบนโปรไฟล์
   static const List<String> order = [
     admin,
+    depositStaff,
     uploader,
     monthYear,
     member,
@@ -105,6 +110,10 @@ class MenuAccess {
 
   /// รายงาน › ฌาปนกิจ-สลิป / ผู้เกษียณในรายการฌาปนกิจ
   bool get reports => isStaff;
+
+  /// ข้อมูลสมาชิก / ฝากเงินชำระล่วงหน้า (งานเงินฝากฌาปนกิจล่วงหน้า) — เจ้าหน้าที่รับฝากเงินล่วงหน้า และผู้ดูแล
+  /// ผู้นำไฟล์เข้าไม่เห็น (คนละคนกัน — ผู้ใช้แจ้ง 6 พ.ย. 2569)
+  bool get depositStaff => _has(Roles.depositStaff) || isAdmin;
 
   /// ผู้ดูแล › ผู้ใช้ / ผู้มีสิทธิ์นำไฟล์เข้า / ลายเซ็นใบเสร็จ / นำเข้าข้อมูลเดิม
   bool get admin => isAdmin;

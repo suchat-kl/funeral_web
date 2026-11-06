@@ -121,6 +121,14 @@ class FakeBackend implements HttpClientAdapter {
       roles: ['NON_MEMBER'],
       mustChange: true,
     ),
+    // เจ้าหน้าที่รับฝากเงินล่วงหน้า (คนละคนกับผู้นำไฟล์เข้า)
+    'deposit1': FakeUser(
+      id: 'u-deposit',
+      password: 'Deposit@2569x',
+      fullName: 'ทดสอบ รับฝากเงิน',
+      idcard: fakeIdcard('100000000010'),
+      roles: ['NON_MEMBER', 'DEPOSIT_STAFF'],
+    ),
     // ลูกจ้างประจำ เงินนอกงบประมาณ ได้บทบาทผู้ใช้ทะเบียนคุมแล้ว
     'nonbudget1': FakeUser(
       id: 'u-nb',
@@ -158,6 +166,22 @@ class FakeBackend implements HttpClientAdapter {
   final List<Map<String, dynamic>> queries = [];
   final List<Map<String, dynamic>?> bodies = [];
   final List<String?> authHeaders = [];
+
+  /// เส้นเพิ่มของเทสต์ (เช่นงานเงินฝาก) — คืน null = ไม่ใช่เส้นของตัวนี้ ให้ทำต่อตามปกติ
+  /// [roles] = บทบาทของผู้เรียก (null = ไม่ได้เข้าสู่ระบบ)
+  ResponseBody? Function(
+    String call,
+    Map<String, dynamic>? body,
+    Map<String, dynamic> query,
+    List<String>? roles,
+  )?
+  extra;
+
+  ResponseBody json(int status, Object body) => _json(status, body);
+  ResponseBody error(int status, String code, String message) =>
+      _err(status, code, message);
+  ResponseBody bytes(Uint8List b, String type, String fileName) =>
+      _bytes(b, type, fileName);
 
   Map<String, dynamic>? bodyOf(String call) {
     final i = calls.lastIndexOf(call);
@@ -569,6 +593,14 @@ class FakeBackend implements HttpClientAdapter {
     ResponseBody unauth() => _err(401, 'UNAUTHENTICATED', 'กรุณาเข้าสู่ระบบ');
     ResponseBody forbidden() =>
         _err(403, 'FORBIDDEN', 'คุณไม่มีสิทธิ์ใช้งานส่วนนี้');
+
+    final extraReply = extra?.call(
+      call,
+      body,
+      Map<String, dynamic>.from(options.queryParameters),
+      user?.roles,
+    );
+    if (extraReply != null) return extraReply;
 
     // ───────── เข้าสู่ระบบ ─────────
     if (call == 'POST /api/auth/login') {

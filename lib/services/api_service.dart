@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../config/app_config.dart';
 import '../models/control_user.dart';
+import '../models/deposit.dart';
 import '../models/home_document.dart';
 import '../models/import_result.dart';
 import '../models/passkey.dart';
@@ -22,6 +23,9 @@ import '../utils/logger.dart';
 import '../utils/roles.dart';
 import '../utils/util.dart';
 import 'auth_interceptor.dart';
+
+// เส้นของงานเงินฝากฌาปนกิจล่วงหน้า แยกไฟล์ไว้ (ใช้ตัวช่วย private ของไฟล์นี้)
+part 'deposit_api.dart';
 
 /// รหัสข้อผิดพลาดของ backend (ช่อง `code` ของ `{code, message, success:false}`)
 /// หน้าจอใช้แยกกรณีโดยไม่ต้องเทียบข้อความ — ข้อความที่แสดงใช้ `message` ของ backend (เป็นภาษาไทยอยู่แล้ว)

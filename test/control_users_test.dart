@@ -35,7 +35,7 @@ void main() {
     (tester) async {
       await open(tester, 'upload1', 'Upload@2569x');
       // ยังไม่มีสิทธิ์: U สองคน, ไม่ใช่สมาชิกประเภท E, ไม่ใช่สมาชิกไม่ทราบประเภท
-      for (final id in ['u-unk1', 'u-unk2', 'u-non', 'u-new']) {
+      for (final id in ['u-unk1', 'u-unk2', 'u-non', 'u-new', 'u-deposit']) {
         expect(row(id), findsOneWidget, reason: id);
       }
       // มีสิทธิ์อยู่แล้ว: บทบาทผู้ใช้ทะเบียนคุม สมาชิก ผู้นำไฟล์เข้า ผู้ดูแล
@@ -63,7 +63,7 @@ void main() {
       expect(find.text('5 พฤศจิกายน 2569 10:30 น.'), findsOneWidget);
       expect(textContaining(backend.users['unknown1']!.idcard), findsNothing);
       expect(textContaining('xxxx'), findsWidgets);
-      expect(find.text('ทั้งหมด 4 บัญชี'), findsOneWidget);
+      expect(find.text('ทั้งหมด 5 บัญชี'), findsOneWidget);
     },
   );
 
