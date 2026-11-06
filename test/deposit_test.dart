@@ -6,7 +6,10 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:funeral_web/screens/deposit/deposit_entry_screen.dart';
 import 'package:funeral_web/screens/deposit/deposit_member_screen.dart';
+import 'package:funeral_web/screens/deposit/deposit_refund_screen.dart';
+import 'package:funeral_web/screens/deposit/monthly_process_screen.dart';
 import 'package:funeral_web/screens/deposit/deposit_parts.dart';
 import 'package:funeral_web/screens/deposit/deposit_report_screens.dart';
 import 'package:funeral_web/screens/deposit/deposit_search_screen.dart';
@@ -72,6 +75,8 @@ class FakeDeposit {
     },
   ];
 
+  bool processed = false;
+
   ResponseBody? handle(
     FakeBackend b,
     String call,
@@ -89,6 +94,87 @@ class FakeDeposit {
       return b.error(403, 'FORBIDDEN', 'ไม่มีสิทธิ์ใช้งานส่วนนี้');
     }
     switch (call) {
+      case 'GET $base/members/9':
+        return b.json(200, {
+          'member': members[0],
+          'account': {'balance': 1500.5, 'debt': 0, 'status': 0, 'version': 7},
+        });
+      case 'GET $base/members/9/payments':
+        return b.json(200, [
+          {
+            'period': 256905,
+            'bodyBegin': 18489,
+            'bodyEnd': 18527,
+            'amount': 156,
+            'paidPeriod': 256905,
+          },
+          {
+            'period': 256904,
+            'bodyBegin': 18450,
+            'bodyEnd': 18488,
+            'amount': 156,
+            'paidPeriod': 256904,
+            'reversedPeriod': 256905,
+          },
+        ]);
+      case 'POST $base/members/9/refund':
+        return b.json(200, {
+          'type': body?['type'],
+          'amount': 156,
+          'balanceBefore': 1500.5,
+          'balance': 1656.5,
+          'debt': 0,
+        });
+      case 'POST $base/deposits':
+        final rows = (body?['rows'] as List).cast<Map>();
+        return b.json(200, [
+          for (final r in rows)
+            {
+              'memberNo': r['memberNo'],
+              'name': 'ชื่อ ${r['memberNo']}',
+              'amount': r['amount'],
+              'reportPeriod': 256906,
+              'clearedPeriods': r['memberNo'] == '120' ? [256904, 256905] : [],
+              'clearedAmount': r['memberNo'] == '120' ? 312 : 0,
+              'balance': 10,
+              'debt': 0,
+            },
+        ]);
+      case 'GET $base/process':
+        return b.json(200, {
+          'openPeriod': processed ? 256907 : 256906,
+          'pending': processed ? [] : [256906],
+          'lastProcessed': processed ? 256906 : 256905,
+          'canUndo': processed,
+          'undoBlockedReason': processed
+              ? null
+              : 'เดือนนี้ประมวลผลในระบบเดิม ยกเลิกในระบบนี้ไม่ได้',
+        });
+      case 'GET $base/process/256906/preview':
+        return b.json(200, {
+          'period': 256906,
+          'ready': true,
+          'amount': 152,
+          'bodyBegin': 18528,
+          'bodyEnd': 18565,
+          'accounts': 3200,
+          'canPay': 2600,
+          'payTotal': 395200,
+          'willOwe': 600,
+          'oweTotal': 91200,
+        });
+      case 'POST $base/process/256906':
+        processed = true;
+        return b.json(200, {
+          'period': 256906,
+          'paid': 2600,
+          'paidTotal': 395200,
+          'owed': 600,
+          'reportRows': 3210,
+        });
+      case 'POST $base/process/256906/undo':
+        processed = false;
+        return b.json(200, {'period': 256906, 'payments': 2600, 'debts': 600});
       case 'GET $base/members':
         final q = '${query['q'] ?? ''}';
         final rows = members
@@ -402,5 +488,175 @@ void main() {
     expect(find.text('นางสมศรี ค้างจ่าย'), findsOneWidget);
     expect(textContaining('6 พฤศจิกายน 2569 10:00 น.'), findsOneWidget);
     expect(find.byKey(ExcelButton.buttonKey), findsOneWidget);
+  });
+
+  Future<void> member(WidgetTester tester, int i, String no) async {
+    await tester.enterText(find.byKey(DepositEntryScreen.memberKey(i)), no);
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'บันทึกเงินฝากหลายแถว: แสดงชื่อ ยอดรวม ยืนยัน แล้วแสดงผลปลดหนี้',
+    (tester) async {
+      await open(
+        tester,
+        () => DepositEntryScreen(
+          apiService: ApiService(),
+          today: DateTime(2026, 6, 10),
+        ),
+      );
+      await member(tester, 0, '120');
+      expect(find.text('นางสมศรี ค้างจ่าย'), findsOneWidget);
+      await tester.enterText(
+        find.byKey(DepositEntryScreen.amountKey(0)),
+        '1,000.50',
+      );
+      await tester.enterText(find.byKey(DepositEntryScreen.docKey(0)), 'A001');
+      await tester.tap(find.byKey(DepositEntryScreen.addRowKey));
+      await tester.pumpAndSettle();
+      await member(tester, 1, '9');
+      await tester.enterText(
+        find.byKey(DepositEntryScreen.amountKey(1)),
+        '500',
+      );
+      await tester.pumpAndSettle();
+      expect(textContaining('1,500.50 บาท'), findsWidgets);
+
+      await tester.tap(find.byKey(DepositEntryScreen.saveKey));
+      await tester.pumpAndSettle();
+      expect(
+        textContaining('บันทึกเงินฝาก 2 รายการ รวม 1,500.50 บาท'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('บันทึก').last);
+      await tester.pumpAndSettle();
+      final sent = backend.bodyOf('POST /api/deposit/staff/deposits');
+      final rows = (sent!['rows'] as List).cast<Map>();
+      expect(rows.length, 2);
+      expect(rows[0]['memberNo'], '120');
+      expect(rows[0]['amount'], '1000.50');
+      expect(rows[0]['date'], '2026-06-10');
+      expect(rows[0]['docNo'], 'A001');
+      expect(rows[1]['docNo'], isNull);
+      expect(
+        textContaining('2 เดือน (312.00 บาท): 6904, 6905'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('บันทึกเงินฝาก: เลขที่ไม่พบถูกกันที่หน้าจอ ไม่ส่ง backend', (
+    tester,
+  ) async {
+    await open(
+      tester,
+      () => DepositEntryScreen(
+        apiService: ApiService(),
+        today: DateTime(2026, 6, 10),
+      ),
+    );
+    await member(tester, 0, '55555');
+    expect(find.text('ไม่พบเลขสมาชิกนี้'), findsOneWidget);
+    await tester.enterText(find.byKey(DepositEntryScreen.amountKey(0)), '10');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(DepositEntryScreen.saveKey));
+    await tester.pumpAndSettle();
+    expect(backend.calls, isNot(contains('POST /api/deposit/staff/deposits')));
+    expect(textContaining('แถวที่ 1: ไม่พบเลขสมาชิกนี้'), findsOneWidget);
+  });
+
+  testWidgets('ประมวลผล: ตัวอย่างผล ยืนยัน แล้วยกเลิกเดือนล่าสุดได้', (
+    tester,
+  ) async {
+    await open(tester, () => MonthlyProcessScreen(apiService: ApiService()));
+    expect(
+      find.text('เดือนที่ต้องประมวลผลถัดไป: มิถุนายน 2569'),
+      findsOneWidget,
+    );
+    expect(textContaining('2,600 คน · 395,200.00 บาท'), findsOneWidget);
+    expect(
+      find.text('เดือนนี้ประมวลผลในระบบเดิม ยกเลิกในระบบนี้ไม่ได้'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(MonthlyProcessScreen.processKey));
+    await tester.pumpAndSettle();
+    expect(textContaining('ศพที่ 18528-18565 คนละ 152.00 บาท'), findsOneWidget);
+    await tester.tap(find.text('ประมวลผล').last);
+    await tester.pumpAndSettle();
+    expect(backend.calls, contains('POST /api/deposit/staff/process/256906'));
+    expect(
+      find.text('เดือนที่ต้องประมวลผลถัดไป: กรกฎาคม 2569'),
+      findsOneWidget,
+    );
+    expect(
+      textContaining('ยังไม่ได้บันทึกค่าฌาปนกิจของเดือน กรกฎาคม 2569'),
+      findsOneWidget,
+    );
+    expect(textContaining('รายงานประจำเดือน 3,210 แถว'), findsOneWidget);
+
+    await tester.tap(find.byKey(MonthlyProcessScreen.undoKey));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ยกเลิกการประมวลผล').last);
+    await tester.pumpAndSettle();
+    expect(
+      backend.calls,
+      contains('POST /api/deposit/staff/process/256906/undo'),
+    );
+    expect(
+      find.text('เดือนที่ต้องประมวลผลถัดไป: มิถุนายน 2569'),
+      findsOneWidget,
+    );
+  });
+
+  Future<void> openRefund(WidgetTester tester) async {
+    await open(
+      tester,
+      () => DepositRefundScreen(
+        apiService: ApiService(),
+        today: DateTime(2026, 6, 10),
+      ),
+    );
+    await tester.enterText(find.byKey(DepositRefundScreen.memberKey), '9');
+    await tester.tap(find.byKey(DepositRefundScreen.findKey));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'คืนกรณีเก็บซ้ำซ้อน: เลือกได้เฉพาะเดือนที่ยังไม่คืน ส่ง version',
+    (tester) async {
+      await openRefund(tester);
+      await tester.tap(find.byKey(DepositRefundScreen.duplicateKey));
+      await tester.pumpAndSettle();
+      expect(find.byKey(DepositRefundScreen.monthKey(256905)), findsOneWidget);
+      expect(find.byKey(DepositRefundScreen.monthKey(256904)), findsNothing);
+      await tester.tap(find.byKey(DepositRefundScreen.monthKey(256905)));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(DepositRefundScreen.submitKey));
+      await tester.tap(find.byKey(DepositRefundScreen.submitKey));
+      await tester.pumpAndSettle();
+      expect(textContaining('1,500.50 → 1,656.50 บาท'), findsOneWidget);
+      await tester.tap(find.text('คืนเงิน').last);
+      await tester.pumpAndSettle();
+      final sent = backend.bodyOf('POST /api/deposit/staff/members/9/refund');
+      expect(sent?['type'], 'DUPLICATE');
+      expect(sent?['version'], 7);
+      expect(sent?['periods'], [256905]);
+      expect(sent?['date'], '2026-06-10');
+    },
+  );
+
+  testWidgets('จ่ายคืนปิดบัญชี: ยืนยันแสดงยอดก่อน-หลัง', (tester) async {
+    await openRefund(tester);
+    await tester.ensureVisible(find.byKey(DepositRefundScreen.submitKey));
+    await tester.tap(find.byKey(DepositRefundScreen.submitKey));
+    await tester.pumpAndSettle();
+    expect(textContaining('1,500.50 → 0.00 บาท'), findsOneWidget);
+    expect(textContaining('สภาพหลังปิด: ลาออก'), findsOneWidget);
+    await tester.tap(find.text('จ่ายคืนและปิดบัญชี').last);
+    await tester.pumpAndSettle();
+    final sent = backend.bodyOf('POST /api/deposit/staff/members/9/refund');
+    expect(sent?['type'], 'CLOSE');
+    expect(sent?['status'], 1);
   });
 }

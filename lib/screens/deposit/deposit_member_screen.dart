@@ -35,6 +35,7 @@ class DepositMemberScreen extends StatefulWidget {
   static const Key specialAmountKey = ValueKey('deposit-special-amount');
   static const Key specialRefKey = ValueKey('deposit-special-ref');
   static const Key saveSpecialKey = ValueKey('deposit-save-special');
+  static const Key clearDebtKey = ValueKey('deposit-clear-debt');
   static Key tabKey(int i) => ValueKey('deposit-detail-tab-$i');
 
   static const List<String> tabs = [
@@ -201,6 +202,31 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
     ),
     'บันทึกสมาชิกพิเศษแล้ว',
   );
+
+  /// ปลดหนี้ค้างด้วยยอดเงินที่มีในบัญชี (เดือนเก่าก่อน)
+  Future<void> _clearDebts() async {
+    final a = _detail?.account;
+    if (a == null) return;
+    final ok = await AppDialog.showConfirm(
+      context,
+      'ปลดหนี้ค้างด้วยยอดเงินฝาก ${moneyText(a.balance)} บาท?\n'
+      'ระบบปลดเดือนเก่าก่อน ทีละเดือนจนยอดไม่พอ',
+      confirmText: 'ปลดหนี้',
+    );
+    if (ok != true || !mounted) return;
+    await _guard(() async {
+      final r = await _api.depositClearDebts(_no, a.version);
+      _debts = null;
+      _payments = null;
+      _ledger = null;
+      if (mounted) {
+        context.showInfoSnackBar(
+          'ปลดหนี้ ${r.clearedPeriods.length} เดือน คงเหลือ ${moneyText(r.balance)} บาท',
+        );
+      }
+    }, 'บันทึกการปลดหนี้แล้ว');
+    if (mounted && _tab == 3) await _loadTab(3);
+  }
 
   Future<void> _openAccount() =>
       _guard(() => _api.depositOpenAccount(_no), 'เปิดบัญชีฝากล่วงหน้าแล้ว');
@@ -579,7 +605,28 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
       0 => _accountTab(d),
       1 => _specialTab(d),
       2 => _monthTab(_payments, debt: false),
-      3 => _monthTab(_debts, debt: true),
+      3 => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (d.account != null &&
+              (double.tryParse(d.account!.debt) ?? 0) > 0) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                key: DepositMemberScreen.clearDebtKey,
+                onPressed: _saving ? null : _clearDebts,
+                icon: const Icon(Icons.price_check),
+                label: Text(
+                  'ปลดหนี้ด้วยยอดเงินฝาก',
+                  style: screenText(size: 14, color: Colors.white),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          _monthTab(_debts, debt: true),
+        ],
+      ),
       4 => _receiptTab(),
       _ => _ledgerTab(),
     };

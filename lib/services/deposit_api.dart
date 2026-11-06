@@ -277,4 +277,106 @@ extension DepositApi on ApiService {
     fallbackName: 'deposit-$period.xlsx',
     failMessage: 'ส่งออก Excel ไม่สำเร็จ',
   );
+
+  // ---------------- งานเงิน ----------------
+
+  static String _isoDate(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// บันทึกเงินฝากหลายแถวในครั้งเดียว (ทั้งชุดหรือไม่บันทึกเลย) — แถวผิด backend แจ้ง "แถวที่ n: ..."
+  Future<List<DepositSaveResult>> depositSave(
+    List<({String memberNo, DateTime date, String amount, String? docNo})> rows,
+  ) async {
+    final r = await _authedRequest(
+      'POST',
+      '$_base/deposits',
+      data: {
+        'rows': [
+          for (final x in rows)
+            {
+              'memberNo': x.memberNo,
+              'date': _isoDate(x.date),
+              'amount': x.amount,
+              'docNo': x.docNo,
+            },
+        ],
+      },
+    );
+    return [
+      for (final j in _listOf(r, 'บันทึกเงินฝากไม่สำเร็จ'))
+        DepositSaveResult.fromJson(j),
+    ];
+  }
+
+  Future<DepositSaveResult> depositClearDebts(
+    String memberNo,
+    int? version,
+  ) async {
+    final r = await _authedRequest(
+      'POST',
+      '$_base/members/$memberNo/clear-debts',
+      data: {'version': version},
+    );
+    return DepositSaveResult.fromJson(_mapOf(r, 'ปลดหนี้ไม่สำเร็จ'));
+  }
+
+  /// [type] CLOSE = จ่ายคืนเงินคงเหลือปิดบัญชี / DUPLICATE = คืนกรณีเก็บซ้ำซ้อน ([periods] เดือนที่คืน)
+  Future<RefundResultData> depositRefund(
+    String memberNo, {
+    required String type,
+    required int? version,
+    String? docNo,
+    String? reason,
+    DateTime? date,
+    int? status,
+    String? statusText,
+    List<int>? periods,
+  }) async {
+    final r = await _authedRequest(
+      'POST',
+      '$_base/members/$memberNo/refund',
+      data: {
+        'type': type,
+        'version': version,
+        'docNo': docNo,
+        'reason': reason,
+        if (date != null) 'date': _isoDate(date),
+        'status': status,
+        'statusText': statusText,
+        'periods': periods,
+      },
+    );
+    return RefundResultData.fromJson(_mapOf(r, 'จ่ายคืนไม่สำเร็จ'));
+  }
+
+  Future<ProcessStatusData> depositProcessStatus() async {
+    final r = await _authedRequest('GET', '$_base/process');
+    return ProcessStatusData.fromJson(
+      _mapOf(r, 'โหลดสถานะการประมวลผลไม่สำเร็จ'),
+    );
+  }
+
+  Future<ProcessPreviewData> depositProcessPreview(int period) async {
+    final r = await _authedRequest('GET', '$_base/process/$period/preview');
+    return ProcessPreviewData.fromJson(_mapOf(r, 'โหลดตัวอย่างผลไม่สำเร็จ'));
+  }
+
+  /// ประมวลผลหักเงิน + สร้างรายงานประจำเดือน (อาจใช้เวลานาน)
+  Future<Map<String, dynamic>> depositProcess(int period) async {
+    final r = await _authedRequest(
+      'POST',
+      '$_base/process/$period',
+      receiveTimeout: const Duration(minutes: 5),
+    );
+    return _mapOf(r, 'ประมวลผลไม่สำเร็จ');
+  }
+
+  Future<Map<String, dynamic>> depositUndoProcess(int period) async {
+    final r = await _authedRequest(
+      'POST',
+      '$_base/process/$period/undo',
+      receiveTimeout: const Duration(minutes: 5),
+    );
+    return _mapOf(r, 'ยกเลิกการประมวลผลไม่สำเร็จ');
+  }
 }

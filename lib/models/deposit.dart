@@ -244,6 +244,9 @@ class DepositMonthItem {
   final int? paidPeriod;
   final bool cleared;
 
+  /// คืนกรณีเก็บซ้ำซ้อนแล้ว (เดือนในรายงานที่คืน) null = ยังไม่คืน
+  final int? reversedPeriod;
+
   const DepositMonthItem({
     this.period,
     this.bodyBegin,
@@ -252,6 +255,7 @@ class DepositMonthItem {
     this.remark,
     this.paidPeriod,
     this.cleared = false,
+    this.reversedPeriod,
   });
 
   String get bodies => bodyBegin == null ? '-' : '$bodyBegin-${bodyEnd ?? ''}';
@@ -264,6 +268,7 @@ class DepositMonthItem {
     remark: _s(j['remark']),
     paidPeriod: _i(j['paidPeriod']),
     cleared: _b(j['cleared']),
+    reversedPeriod: _i(j['reversedPeriod']),
   );
 }
 
@@ -565,4 +570,144 @@ class DivisionItem {
 
   factory DivisionItem.fromJson(Map<String, dynamic> j) =>
       DivisionItem(_str(j['code']), _str(j['name']));
+}
+
+/// ผลบันทึกเงินฝากต่อแถว
+class DepositSaveResult {
+  final String memberNo;
+  final String name;
+  final String amount;
+  final int reportPeriod;
+  final List<int> clearedPeriods;
+  final String clearedAmount;
+  final String balance;
+  final String debt;
+
+  const DepositSaveResult({
+    required this.memberNo,
+    this.name = '',
+    this.amount = '0',
+    this.reportPeriod = 0,
+    this.clearedPeriods = const [],
+    this.clearedAmount = '0',
+    this.balance = '0',
+    this.debt = '0',
+  });
+
+  factory DepositSaveResult.fromJson(Map<String, dynamic> j) =>
+      DepositSaveResult(
+        memberNo: _str(j['memberNo']),
+        name: _str(j['name']),
+        amount: _str(j['amount']),
+        reportPeriod: _i(j['reportPeriod']) ?? 0,
+        clearedPeriods: [
+          for (final x
+              in (j['clearedPeriods'] is List
+                  ? j['clearedPeriods'] as List
+                  : const []))
+            if (_i(x) != null) _i(x)!,
+        ],
+        clearedAmount: _str(j['clearedAmount']),
+        balance: _str(j['balance']),
+        debt: _str(j['debt']),
+      );
+}
+
+/// สถานะการประมวลผล: เดือนที่เปิดอยู่ เดือนที่ยังไม่ประมวลผล และยกเลิกเดือนล่าสุดได้หรือไม่
+class ProcessStatusData {
+  final int openPeriod;
+  final List<int> pending;
+  final int? lastProcessed;
+  final bool canUndo;
+  final String? undoBlockedReason;
+
+  const ProcessStatusData({
+    required this.openPeriod,
+    this.pending = const [],
+    this.lastProcessed,
+    this.canUndo = false,
+    this.undoBlockedReason,
+  });
+
+  factory ProcessStatusData.fromJson(Map<String, dynamic> j) =>
+      ProcessStatusData(
+        openPeriod: _i(j['openPeriod']) ?? 0,
+        pending: [
+          for (final x
+              in (j['pending'] is List ? j['pending'] as List : const []))
+            if (_i(x) != null) _i(x)!,
+        ],
+        lastProcessed: _i(j['lastProcessed']),
+        canUndo: _b(j['canUndo']),
+        undoBlockedReason: _s(j['undoBlockedReason']),
+      );
+}
+
+/// ตัวอย่างผลก่อนประมวลผล
+class ProcessPreviewData {
+  final int period;
+  final bool ready;
+  final String? reason;
+  final String amount;
+  final int? bodyBegin;
+  final int? bodyEnd;
+  final int accounts;
+  final int canPay;
+  final String payTotal;
+  final int willOwe;
+  final String oweTotal;
+
+  const ProcessPreviewData({
+    required this.period,
+    this.ready = false,
+    this.reason,
+    this.amount = '0',
+    this.bodyBegin,
+    this.bodyEnd,
+    this.accounts = 0,
+    this.canPay = 0,
+    this.payTotal = '0',
+    this.willOwe = 0,
+    this.oweTotal = '0',
+  });
+
+  factory ProcessPreviewData.fromJson(Map<String, dynamic> j) =>
+      ProcessPreviewData(
+        period: _i(j['period']) ?? 0,
+        ready: _b(j['ready']),
+        reason: _s(j['reason']),
+        amount: _str(j['amount']),
+        bodyBegin: _i(j['bodyBegin']),
+        bodyEnd: _i(j['bodyEnd']),
+        accounts: _i(j['accounts']) ?? 0,
+        canPay: _i(j['canPay']) ?? 0,
+        payTotal: _str(j['payTotal']),
+        willOwe: _i(j['willOwe']) ?? 0,
+        oweTotal: _str(j['oweTotal']),
+      );
+}
+
+/// ผลจ่ายคืน
+class RefundResultData {
+  final String type;
+  final String amount;
+  final String balanceBefore;
+  final String balance;
+  final String debt;
+
+  const RefundResultData({
+    this.type = '',
+    this.amount = '0',
+    this.balanceBefore = '0',
+    this.balance = '0',
+    this.debt = '0',
+  });
+
+  factory RefundResultData.fromJson(Map<String, dynamic> j) => RefundResultData(
+    type: _str(j['type']),
+    amount: _str(j['amount']),
+    balanceBefore: _str(j['balanceBefore']),
+    balance: _str(j['balance']),
+    debt: _str(j['debt']),
+  );
 }

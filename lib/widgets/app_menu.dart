@@ -11,10 +11,13 @@ import '../screens/cash_receipt_screen.dart';
 import '../screens/chapana_retired_screen.dart';
 import '../screens/chapana_slip_screen.dart';
 import '../screens/control_users_screen.dart';
+import '../screens/deposit/deposit_entry_screen.dart';
 import '../screens/deposit/deposit_parts.dart';
+import '../screens/deposit/deposit_refund_screen.dart';
 import '../screens/deposit/deposit_report_screens.dart';
 import '../screens/deposit/deposit_search_screen.dart';
 import '../screens/deposit/monthly_cost_screen.dart';
+import '../screens/deposit/monthly_process_screen.dart';
 import '../screens/general_files_screen.dart';
 import '../screens/monthyear_files_screen.dart';
 import '../screens/receipt_period_screen.dart';
@@ -210,11 +213,32 @@ List<AppMenuGroup> buildAppMenu() {
       icon: Icons.savings,
       items: [
         AppMenuItem(
+          id: 'deposit-entry',
+          title: DepositEntryScreen.menuTitle,
+          icon: DepositEntryScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => DepositEntryScreen(apiService: api()),
+        ),
+        AppMenuItem(
           id: 'deposit-monthly-cost',
           title: MonthlyCostScreen.menuTitle,
           icon: MonthlyCostScreen.menuIcon,
           visible: (a) => a.depositStaff,
           screen: () => MonthlyCostScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-process',
+          title: MonthlyProcessScreen.menuTitle,
+          icon: MonthlyProcessScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => MonthlyProcessScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-refund',
+          title: DepositRefundScreen.menuTitle,
+          icon: DepositRefundScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => DepositRefundScreen(apiService: api()),
         ),
         AppMenuItem(
           id: 'deposit-report-monthly',
