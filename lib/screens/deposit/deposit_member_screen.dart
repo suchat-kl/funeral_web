@@ -18,7 +18,8 @@ import 'deposit_parts.dart';
 /// หัว: ชื่อ-สกุล (ทะเบียนสมาชิก) เลขสมาชิก สังกัด สภาพสมาชิก บันทึกช่วยจำ
 /// แท็บ: บัญชีฝาก · สมาชิกพิเศษ · ประวัติชำระ · ประวัติค้างชำระ · ประวัติฝาก · ทะเบียนรายตัว
 /// เจ้าหน้าที่: หน้านี้ไม่แก้ยอดเงิน — ยอดเปลี่ยนได้เฉพาะจากเมนูบันทึกเงินฝาก / ประมวลผล / จ่ายคืน
-/// ผู้ดูแลระบบ (ADMIN): แก้ได้ทุกส่วน กดแถวในแท็บประวัติเพื่อแก้/ลบ ปรับยอดเงินฝาก แก้ทะเบียน (ต้องใส่เหตุผล)
+/// เจ้าหน้าที่รับฝากเงินล่วงหน้า/ผู้ดูแลระบบ: แก้ได้ทุกส่วน กดแถวในแท็บประวัติเพื่อแก้/ลบ ปรับยอดเงินฝาก แก้ทะเบียน (ต้องใส่เหตุผล)
+/// (ผู้ใช้สั่ง 7 พ.ย. 2569: เจ้าหน้าที่ได้ทุกสิทธิ์ของงานเงินฝาก ยกเว้นจัดการผู้ใช้)
 class DepositMemberScreen extends StatefulWidget {
   final ApiService apiService;
   final String memberNo;
@@ -86,8 +87,8 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
   ApiService get _api => widget.apiService;
   String get _no => widget.memberNo;
 
-  /// ผู้ดูแลระบบแก้ไขได้ทุกส่วน (backend ตรวจซ้ำที่ /api/deposit/admin/**)
-  bool get _admin => MenuAccess(loggedIn: true, roles: _api.roles).isAdmin;
+  /// เจ้าหน้าที่รับฝากเงินล่วงหน้าและผู้ดูแลระบบแก้ไขได้ทุกส่วน (backend ตรวจซ้ำที่ /api/deposit/admin/**)
+  bool get _admin => MenuAccess(loggedIn: true, roles: _api.roles).depositStaff;
 
   @override
   void initState() {
@@ -244,7 +245,7 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
   Future<void> _openAccount() =>
       _guard(() => _api.depositOpenAccount(_no), 'เปิดบัญชีฝากล่วงหน้าแล้ว');
 
-  // ---------------- ผู้ดูแลระบบแก้ไข ----------------
+  // ---------------- แก้ไขข้อมูลย้อนหลัง (เจ้าหน้าที่/ผู้ดูแลระบบ) ----------------
 
   /// ทำงานแก้ไข แล้วโหลดข้อมูลและแท็บที่เปิดอยู่ใหม่ (ล้างประวัติที่โหลดไว้ทั้งหมด)
   Future<void> _adminDo(Future<AdminEditResult> Function() work) async {
@@ -336,7 +337,7 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
     final a = _detail!.account!;
     final r = await showAdminForm(
       context,
-      title: 'แก้ไขบัญชีฝาก (ผู้ดูแลระบบ)',
+      title: 'แก้ไขบัญชีฝาก',
       note:
           'ล้างเดือนที่ปิดบัญชี = เปิดบัญชีกลับมาใช้ (กลับเข้ารอบหักรายเดือนถ้าสภาพปกติ) '
           'เปลี่ยนเดือนที่ปิดแล้ว รายงานประจำเดือนของสมาชิกนี้จะคำนวณใหม่',
@@ -389,9 +390,9 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
   Future<void> _adminAdjust() async {
     final r = await showAdminForm(
       context,
-      title: 'ปรับยอดเงินฝาก (ผู้ดูแลระบบ)',
+      title: 'ปรับยอดเงินฝาก',
       note:
-          'ใส่จำนวนบวกเพื่อเพิ่มยอด หรือติดลบเพื่อลดยอด ระบบบันทึกเป็นรายการ "ปรับยอดโดยผู้ดูแลระบบ" '
+          'ใส่จำนวนบวกเพื่อเพิ่มยอด หรือติดลบเพื่อลดยอด ระบบบันทึกเป็นรายการ "ปรับยอดเงินฝาก" '
           'นับในช่อง "รับ" ของรายงานเดือนที่เลือก (ไม่ระบุ = เดือนที่เปิดอยู่)',
       saveText: 'ปรับยอด',
       fields: const [
@@ -671,10 +672,7 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
                     key: DepositMemberScreen.adminRegisterKey,
                     onPressed: _saving ? null : _adminRegister,
                     icon: const Icon(Icons.edit_note),
-                    label: Text(
-                      'แก้ไขทะเบียน (ผู้ดูแลระบบ)',
-                      style: screenText(size: 13.5),
-                    ),
+                    label: Text('แก้ไขทะเบียน', style: screenText(size: 13.5)),
                   ),
               ],
             ),
@@ -771,7 +769,7 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
         const SizedBox(height: 8),
         Text(
           _admin
-              ? 'ผู้ดูแลระบบ: ปรับยอดเงินฝาก หรือแก้รายการในแท็บประวัติได้ (ต้องใส่เหตุผล)'
+              ? 'ปรับยอดเงินฝาก หรือแก้รายการในแท็บประวัติได้ (ต้องใส่เหตุผล บันทึกค่าเดิม-ใหม่ทุกครั้ง)'
               : 'ยอดเงินเปลี่ยนได้จากเมนูบันทึกเงินฝาก ประมวลผลหักเงิน และจ่ายคืนเท่านั้น',
           style: screenText(size: 12.5, color: AppTheme.textSecondary),
         ),
@@ -791,10 +789,7 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
                 key: DepositMemberScreen.adminAccountKey,
                 onPressed: _saving ? null : _adminAccount,
                 icon: const Icon(Icons.admin_panel_settings_outlined),
-                label: Text(
-                  'แก้ไขบัญชี (ผู้ดูแลระบบ)',
-                  style: screenText(size: 14),
-                ),
+                label: Text('แก้ไขบัญชี', style: screenText(size: 14)),
               ),
             ],
           ),
@@ -950,7 +945,7 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
             onPressed: _saving ? null : _adminDeleteSpecial,
             icon: const Icon(Icons.delete_outline, color: AppTheme.dangerColor),
             label: Text(
-              'ยกเลิกการเป็นสมาชิกพิเศษ (ผู้ดูแลระบบ)',
+              'ยกเลิกการเป็นสมาชิกพิเศษ',
               style: screenText(size: 14, color: AppTheme.dangerColor),
             ),
           ),
@@ -1001,7 +996,7 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
       : Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _adminHint('ผู้ดูแลระบบ: กดที่แถวเพื่อแก้ไขหรือลบ'),
+            _adminHint('กดที่แถวเพื่อแก้ไขหรือลบ (ต้องใส่เหตุผล)'),
             sheet,
           ],
         );

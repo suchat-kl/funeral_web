@@ -8,7 +8,7 @@ import '../../widgets/screen_parts.dart';
 import '../../widgets/thai_date_picker.dart';
 import 'deposit_parts.dart';
 
-/// ช่องในฟอร์มแก้ไขของผู้ดูแลระบบ
+/// ช่องในฟอร์มแก้ไขข้อมูลย้อนหลัง (เจ้าหน้าที่รับฝากเงินล่วงหน้า/ผู้ดูแลระบบ)
 enum AdminFieldType {
   text,
   money,
@@ -49,7 +49,7 @@ class AdminFormResult {
   const AdminFormResult(this.values, this.reason, {this.delete = false});
 }
 
-/// ฟอร์มแก้ไขของผู้ดูแลระบบ — ต้องกรอกเหตุผลทุกครั้ง; [deleteText] ไม่ว่าง = มีปุ่มลบ (ยืนยันอีกชั้น)
+/// ฟอร์มแก้ไขข้อมูลย้อนหลัง — ต้องกรอกเหตุผลทุกครั้ง; [deleteText] ไม่ว่าง = มีปุ่มลบ (ยืนยันอีกชั้น)
 Future<AdminFormResult?> showAdminForm(
   BuildContext context, {
   required String title,

@@ -105,11 +105,11 @@ class FakeDeposit {
     const base = '/api/deposit/staff';
     final path = call.substring(call.indexOf(' ') + 1);
     if (path.startsWith('/api/deposit/admin/')) {
-      // แก้ไขโดยผู้ดูแลระบบ: ADMIN เท่านั้น (เจ้าหน้าที่รับฝากเงินล่วงหน้าไม่ได้)
+      // แก้ไขย้อนหลัง: เจ้าหน้าที่รับฝากเงินล่วงหน้าและผู้ดูแลระบบ
       if (roles == null) {
         return b.error(401, 'UNAUTHENTICATED', 'กรุณาเข้าสู่ระบบ');
       }
-      if (!roles.contains('ADMIN')) {
+      if (!roles.contains('ADMIN') && !roles.contains('DEPOSIT_STAFF')) {
         return b.error(403, 'FORBIDDEN', 'ไม่มีสิทธิ์ใช้งานส่วนนี้');
       }
       if (body?['reason'] == null) {
@@ -627,18 +627,37 @@ void main() {
       expect(sent?['period'], isNull); // ไม่เลือก = เดือนที่เปิดอยู่
     });
 
-    testWidgets('เจ้าหน้าที่รับฝากเงินล่วงหน้าไม่เห็นเครื่องมือแก้ไข', (
+    testWidgets('เจ้าหน้าที่รับฝากเงินล่วงหน้าแก้ไขได้เหมือนผู้ดูแลระบบ', (
       tester,
     ) async {
       await openPayments(tester, 'deposit1', 'Deposit@2569x');
-      expect(textContaining('กดที่แถวเพื่อแก้ไขหรือลบ'), findsNothing);
+      expect(textContaining('กดที่แถวเพื่อแก้ไขหรือลบ'), findsOneWidget);
       await tester.tap(find.byKey(DepositMemberScreen.rowKey('pay-6905')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('admin-form-save')), findsNothing);
+      await tester.enterText(
+        find.byKey(const ValueKey('admin-form-reason')),
+        'แก้หมายเหตุ',
+      );
+      await tester.tap(find.byKey(const ValueKey('admin-form-save')));
+      await tester.pumpAndSettle();
+      expect(
+        backend.bodyOf('PUT /api/deposit/admin/payments/pay-6905')?['reason'],
+        'แก้หมายเหตุ',
+      );
       await tester.tap(find.byKey(DepositMemberScreen.tabKey(0)));
       await tester.pumpAndSettle();
-      expect(find.byKey(DepositMemberScreen.adminAdjustKey), findsNothing);
-      expect(find.byKey(DepositMemberScreen.adminRegisterKey), findsNothing);
+      expect(find.byKey(DepositMemberScreen.adminAdjustKey), findsOneWidget);
+      expect(find.byKey(DepositMemberScreen.adminRegisterKey), findsOneWidget);
+    });
+
+    test('เจ้าหน้าที่รับฝากเงินล่วงหน้าไม่เห็นเมนูจัดการผู้ใช้', () {
+      const staff = MenuAccess(
+        loggedIn: true,
+        roles: [Roles.nonMember, Roles.depositStaff],
+      );
+      expect(staff.depositStaff, isTrue);
+      expect(staff.admin, isFalse);
+      expect(staff.isAdmin, isFalse);
     });
   });
 

@@ -309,7 +309,7 @@ class DepositReceiptItem {
   /// เดือนในรายงานประจำเดือนที่นับรายการนี้
   final int? reportPeriod;
 
-  /// DEPOSIT / REFUND / ADJUST (ปรับยอดโดยผู้ดูแลระบบ)
+  /// DEPOSIT / REFUND / ADJUST (ปรับยอดเงินฝาก)
   final String? kind;
   final String? note;
 
