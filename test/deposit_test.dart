@@ -65,17 +65,35 @@ class FakeDeposit {
   };
   final List<Map<String, dynamic>> costs = [
     {
+      'period': 256910,
+      'bodyBegin': 18700,
+      'bodyEnd': 18741,
+      'bodyCount': 42,
+      'perBody': 4,
+      'amount': 168,
+      'costDate': '2026-09-30',
+      'totalMembers': 44161,
+      'inDpis': true,
+      'processed': false,
+    },
+    {
       'period': 256909,
       'bodyBegin': 18638,
       'bodyEnd': 18699,
       'bodyCount': 62,
       'perBody': 4,
       'amount': 248,
+      'costDate': '2026-08-31',
+      'totalMembers': 44161,
+      'inDpis': true,
+      'processed': true,
       'processedAt': '2026-10-01T09:00:00',
+      'warning': 'ค่าใน DPIS เปลี่ยนหลังประมวลผลแล้ว',
     },
   ];
 
   bool processed = false;
+  Object? lastCostYear;
 
   ResponseBody? handle(
     FakeBackend b,
@@ -273,19 +291,12 @@ class FakeDeposit {
           'account': {'balance': 0, 'debt': 0, 'status': 0, 'version': 0},
         });
       case 'GET $base/monthly-costs':
-        return b.json(200, costs);
-      case 'GET $base/monthly-costs/draft':
+        lastCostYear = query['year'];
         return b.json(200, {
-          'period': 256910,
-          'bodyBegin': 18700,
-          'perBody': 4,
-          'announcementRef': 'ประกาศ 2552',
+          'year': query['year'] == null ? 2569 : int.parse('${query['year']}'),
+          'years': [2569, 2568],
+          'rows': '${query['year']}' == '2568' ? [] : costs,
         });
-      case 'POST $base/monthly-costs':
-        final n = (body!['bodyEnd'] as int) - (body['bodyBegin'] as int) + 1;
-        final c = {...body, 'bodyCount': n, 'amount': n * 4};
-        costs.insert(0, c);
-        return b.json(200, c);
       case 'GET $base/reports/monthly':
         return b.json(200, [256905]);
       case 'GET $base/reports/monthly/256905':
@@ -469,25 +480,34 @@ void main() {
     expect(find.text('ทดสอบ ทะเบียน'), findsOneWidget);
   });
 
-  testWidgets('ค่าฌาปนกิจรายเดือน: ตั้งต้นจากเดือนก่อน คำนวณยอด แล้วบันทึก', (
+  testWidgets('ค่าฌาปนกิจประจำเดือน: อ่านจาก DPIS อย่างเดียว เลือกปีได้', (
     tester,
   ) async {
     await open(tester, () => MonthlyCostScreen(apiService: ApiService()));
-    expect(find.text('เพิ่มเดือนใหม่: ตุลาคม 2569'), findsOneWidget);
+    expect(find.byKey(MonthlyCostScreen.rowKey(256910)), findsOneWidget);
+    expect(find.text('18700-18741'), findsOneWidget);
+    expect(find.text('168.00'), findsOneWidget);
+    expect(find.text('ยังไม่ประมวลผล'), findsOneWidget);
     expect(find.text('ประมวลผลแล้ว'), findsOneWidget);
-    expect(find.byKey(MonthlyCostScreen.editKey(256909)), findsNothing);
+    expect(textContaining('เปลี่ยนหลังประมวลผล'), findsOneWidget);
+    expect(find.text('30 กันยายน 2569'), findsOneWidget);
+    // ไม่มีช่องกรอกหรือปุ่มบันทึก
+    expect(find.byType(TextField), findsNothing);
+    expect(find.byType(FilledButton), findsNothing);
+    expect(deposit.lastCostYear, isNull);
 
-    await tester.enterText(find.byKey(MonthlyCostScreen.endKey), '18739');
+    await tester.tap(find.byKey(MonthlyCostScreen.yearKey));
     await tester.pumpAndSettle();
-    expect(find.text('ยอดต่อคน: 40 ศพ × 4 = 160.00 บาท'), findsOneWidget);
-    await tester.tap(find.byKey(MonthlyCostScreen.saveKey));
+    await tester.tap(find.text('2568').last);
     await tester.pumpAndSettle();
-    final sent = backend.bodyOf('POST /api/deposit/staff/monthly-costs');
-    expect(sent?['period'], 256910);
-    expect(sent?['bodyBegin'], 18700);
-    expect(sent?['bodyEnd'], 18739);
-    expect(sent?['perBody'], '4');
-    expect(find.byKey(MonthlyCostScreen.editKey(256910)), findsOneWidget);
+    expect('${deposit.lastCostYear}', '2568');
+    expect(textContaining('ไม่มีค่าฌาปนกิจของปี 2568'), findsOneWidget);
+    expect(
+      backend.calls.where(
+        (c) => c.contains('/api/deposit/') && !c.startsWith('GET'),
+      ),
+      isEmpty,
+    );
   });
 
   testWidgets('รายงานประจำเดือน: ยอดรวม และส่งออก Excel', (tester) async {
@@ -722,7 +742,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      textContaining('ยังไม่ได้บันทึกค่าฌาปนกิจของเดือน กรกฎาคม 2569'),
+      textContaining('ยังไม่มีค่าฌาปนกิจของเดือน กรกฎาคม 2569 ใน DPIS'),
       findsOneWidget,
     );
     expect(textContaining('รายงานประจำเดือน 3,210 แถว'), findsOneWidget);

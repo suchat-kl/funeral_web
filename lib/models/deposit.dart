@@ -381,7 +381,7 @@ class LedgerItem {
   );
 }
 
-/// ค่าฌาปนกิจประจำเดือน
+/// ค่าฌาปนกิจประจำเดือน (ffd_monthly_cost ใน DPIS) + สถานะประมวลผลในระบบนี้ — อ่านอย่างเดียว
 class MonthlyCostItem {
   final int period;
   final int? bodyBegin;
@@ -389,9 +389,20 @@ class MonthlyCostItem {
   final int? bodyCount;
   final String? perBody;
   final String? amount;
-  final String? announcementRef;
+
+  /// วันที่ประกาศค่าฌาปนกิจ (ค.ศ. yyyy-MM-dd)
+  final String? costDate;
+  final int? totalMembers;
+  final int? totalBodies;
+  final int? totalResigned;
+  final int? totalCut;
+  final bool inDpis;
+  final bool processed;
   final String? processedAt;
   final String? processedBy;
+
+  /// ข้อมูลไม่สอดคล้อง / DPIS แก้หลังประมวลผล (null = ปกติ)
+  final String? warning;
 
   const MonthlyCostItem({
     required this.period,
@@ -400,12 +411,17 @@ class MonthlyCostItem {
     this.bodyCount,
     this.perBody,
     this.amount,
-    this.announcementRef,
+    this.costDate,
+    this.totalMembers,
+    this.totalBodies,
+    this.totalResigned,
+    this.totalCut,
+    this.inDpis = true,
+    this.processed = false,
     this.processedAt,
     this.processedBy,
+    this.warning,
   });
-
-  bool get processed => processedAt != null;
 
   factory MonthlyCostItem.fromJson(Map<String, dynamic> j) => MonthlyCostItem(
     period: _i(j['period']) ?? 0,
@@ -414,10 +430,45 @@ class MonthlyCostItem {
     bodyCount: _i(j['bodyCount']),
     perBody: _s(j['perBody']),
     amount: _s(j['amount']),
-    announcementRef: _s(j['announcementRef']),
+    costDate: _s(j['costDate']),
+    totalMembers: _i(j['totalMembers']),
+    totalBodies: _i(j['totalBodies']),
+    totalResigned: _i(j['totalResigned']),
+    totalCut: _i(j['totalCut']),
+    inDpis: _b(j['inDpis']),
+    processed: _b(j['processed']),
     processedAt: _s(j['processedAt']),
     processedBy: _s(j['processedBy']),
+    warning: _s(j['warning']),
   );
+}
+
+/// ค่าฌาปนกิจประจำเดือนของหนึ่งปี พ.ศ.
+class MonthlyCostYearData {
+  final int year;
+  final List<int> years;
+  final List<MonthlyCostItem> rows;
+
+  /// ต่อ DPIS ไม่ได้ (แสดงเฉพาะเดือนที่ประมวลผลในระบบนี้แล้ว)
+  final String? dpisError;
+
+  const MonthlyCostYearData({
+    required this.year,
+    this.years = const [],
+    this.rows = const [],
+    this.dpisError,
+  });
+
+  factory MonthlyCostYearData.fromJson(Map<String, dynamic> j) =>
+      MonthlyCostYearData(
+        year: _i(j['year']) ?? 0,
+        years: [
+          for (final y in (j['years'] is List ? j['years'] as List : const []))
+            if (_i(y) != null) _i(y)!,
+        ],
+        rows: [for (final r in _list(j['rows'])) MonthlyCostItem.fromJson(r)],
+        dpisError: _s(j['dpisError']),
+      );
 }
 
 /// แถวรายงานประจำเดือน (Monthly_Rep)

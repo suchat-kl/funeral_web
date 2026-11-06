@@ -102,18 +102,21 @@ void main() {
     await loginAs(tester, user, pw);
   }
 
-  test('เมนูบัญชีฝากของฉัน: สมาชิกเห็น — เจ้าหน้าที่ที่ไม่ใช่สมาชิกไม่เห็น', () {
-    MenuAccess a(List<String> roles) =>
-        MenuAccess(loggedIn: true, roles: roles);
-    expect(a(const [Roles.member]).myDeposit, isTrue);
-    expect(a(const [Roles.member, Roles.depositStaff]).myDeposit, isTrue);
-    expect(a(const [Roles.nonMember, Roles.depositStaff]).myDeposit, isFalse);
-    expect(a(const [Roles.nonMember, Roles.uploader]).myDeposit, isFalse);
-    expect(
-      const MenuAccess(loggedIn: false, roles: [Roles.member]).myDeposit,
-      isFalse,
-    );
-  });
+  test(
+    'เมนูบัญชีฝากของฉัน: สมาชิกเห็น — เจ้าหน้าที่ที่ไม่ใช่สมาชิกไม่เห็น',
+    () {
+      MenuAccess a(List<String> roles) =>
+          MenuAccess(loggedIn: true, roles: roles);
+      expect(a(const [Roles.member]).myDeposit, isTrue);
+      expect(a(const [Roles.member, Roles.depositStaff]).myDeposit, isTrue);
+      expect(a(const [Roles.nonMember, Roles.depositStaff]).myDeposit, isFalse);
+      expect(a(const [Roles.nonMember, Roles.uploader]).myDeposit, isFalse);
+      expect(
+        const MenuAccess(loggedIn: false, roles: [Roles.member]).myDeposit,
+        isFalse,
+      );
+    },
+  );
 
   testWidgets('หน้าบัญชีของฉัน: ยอด ทวงถาม แท็บ และไม่ส่งเลขสมาชิก', (
     tester,
@@ -173,7 +176,9 @@ void main() {
     expect(textContaining('บัญชีฝากล่วงหน้าของฉัน'), findsOneWidget);
   });
 
-  testWidgets('หน้าแรก: ไม่ใช่สมาชิก = ไม่มีการ์ด และไม่เรียกเส้น', (tester) async {
+  testWidgets('หน้าแรก: ไม่ใช่สมาชิก = ไม่มีการ์ด และไม่เรียกเส้น', (
+    tester,
+  ) async {
     await setUpUser(
       tester,
       'nonmember1',

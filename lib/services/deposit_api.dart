@@ -157,44 +157,15 @@ extension DepositApi on ApiService {
 
   // ---------------- ค่าฌาปนกิจประจำเดือน ----------------
 
-  Future<List<MonthlyCostItem>> depositMonthlyCosts() async {
-    final r = await _authedRequest('GET', '$_base/monthly-costs');
-    return [
-      for (final j in _listOf(r, 'โหลดค่าฌาปนกิจประจำเดือนไม่สำเร็จ'))
-        MonthlyCostItem.fromJson(j),
-    ];
-  }
-
-  /// ค่าตั้งต้นของเดือนถัดไป (period, bodyBegin, perBody, announcementRef)
-  Future<Map<String, dynamic>> depositMonthlyCostDraft() async {
-    final r = await _authedRequest('GET', '$_base/monthly-costs/draft');
-    return _mapOf(r, 'โหลดค่าตั้งต้นไม่สำเร็จ');
-  }
-
-  Future<MonthlyCostItem> depositSaveMonthlyCost({
-    required int period,
-    required int bodyBegin,
-    required int bodyEnd,
-    required String perBody,
-    String? announcementRef,
-    bool create = true,
-  }) async {
-    final body = {
-      'period': period,
-      'bodyBegin': bodyBegin,
-      'bodyEnd': bodyEnd,
-      'perBody': perBody,
-      'announcementRef': announcementRef,
-    };
-    final r = create
-        ? await _authedRequest('POST', '$_base/monthly-costs', data: body)
-        : await _authedRequest(
-            'PUT',
-            '$_base/monthly-costs/$period',
-            data: body,
-          );
-    return MonthlyCostItem.fromJson(
-      _mapOf(r, 'บันทึกค่าฌาปนกิจประจำเดือนไม่สำเร็จ'),
+  /// ค่าฌาปนกิจประจำเดือนจาก DPIS (ffd_monthly_cost) ของปี พ.ศ. — ไม่ระบุ = ปีล่าสุด (อ่านอย่างเดียว)
+  Future<MonthlyCostYearData> depositMonthlyCosts({int? year}) async {
+    final r = await _authedRequest(
+      'GET',
+      '$_base/monthly-costs',
+      query: year == null ? null : {'year': year},
+    );
+    return MonthlyCostYearData.fromJson(
+      _mapOf(r, 'โหลดค่าฌาปนกิจประจำเดือนไม่สำเร็จ'),
     );
   }
 
