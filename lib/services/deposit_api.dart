@@ -1,6 +1,6 @@
 part of 'api_service.dart';
 
-/// เส้นของเจ้าหน้าที่รับฝากเงินล่วงหน้า `/api/deposit/staff/**` (DEPOSIT_STAFF / ADMIN)
+/// เส้นของเจ้าหน้าที่รับฝากเงินล่วงหน้า `/api/deposit/staff/**` (DEPOSIT_STAFF / ADMIN) และของสมาชิก `/api/deposit/me/**`
 ///
 /// ผลมีชื่อ เลขสมาชิก ยอดเงินรายคน — ห้าม log คำค้นและผลลัพธ์
 extension DepositApi on ApiService {
@@ -378,5 +378,56 @@ extension DepositApi on ApiService {
       receiveTimeout: const Duration(minutes: 5),
     );
     return _mapOf(r, 'ยกเลิกการประมวลผลไม่สำเร็จ');
+  }
+
+  // ---- บัญชีฝากล่วงหน้าของฉัน /api/deposit/me — backend ใช้เลขสมาชิกของบัญชีที่เข้าสู่ระบบ หน้าเว็บไม่ส่งเลขไป ----
+
+  static const String _me = '/api/deposit/me';
+
+  Future<MyDepositSummary> depositMySummary() async {
+    final r = await _authedRequest('GET', _me);
+    return MyDepositSummary.fromJson(
+      _mapOf(r, 'โหลดบัญชีฝากล่วงหน้าไม่สำเร็จ'),
+    );
+  }
+
+  Future<List<DepositMonthItem>> depositMyPayments() async {
+    final r = await _authedRequest('GET', '$_me/payments');
+    return [
+      for (final j in _listOf(r, 'โหลดประวัติชำระไม่สำเร็จ'))
+        DepositMonthItem.fromJson(j),
+    ];
+  }
+
+  Future<List<DepositMonthItem>> depositMyDebts() async {
+    final r = await _authedRequest('GET', '$_me/debts');
+    return [
+      for (final j in _listOf(r, 'โหลดประวัติค้างชำระไม่สำเร็จ'))
+        DepositMonthItem.fromJson(j),
+    ];
+  }
+
+  Future<List<DepositReceiptItem>> depositMyReceipts() async {
+    final r = await _authedRequest('GET', '$_me/receipts');
+    return [
+      for (final j in _listOf(r, 'โหลดประวัติฝากไม่สำเร็จ'))
+        DepositReceiptItem.fromJson(j),
+    ];
+  }
+
+  Future<List<LedgerItem>> depositMyLedger() async {
+    final r = await _authedRequest('GET', '$_me/ledger');
+    return [
+      for (final j in _listOf(r, 'โหลดทะเบียนรายตัวไม่สำเร็จ'))
+        LedgerItem.fromJson(j),
+    ];
+  }
+
+  Future<List<MonthlyReportItem>> depositMyMonthly() async {
+    final r = await _authedRequest('GET', '$_me/monthly');
+    return [
+      for (final j in _listOf(r, 'โหลดรายงานประจำเดือนไม่สำเร็จ'))
+        MonthlyReportItem.fromJson(j),
+    ];
   }
 }

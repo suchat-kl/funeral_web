@@ -18,6 +18,7 @@ import '../screens/deposit/deposit_report_screens.dart';
 import '../screens/deposit/deposit_search_screen.dart';
 import '../screens/deposit/monthly_cost_screen.dart';
 import '../screens/deposit/monthly_process_screen.dart';
+import '../screens/deposit/my_deposit_screen.dart';
 import '../screens/general_files_screen.dart';
 import '../screens/monthyear_files_screen.dart';
 import '../screens/receipt_period_screen.dart';
@@ -192,12 +193,19 @@ List<AppMenuGroup> buildAppMenu() {
         ),
       ],
     ),
-    // ── งานเงินฝากฌาปนกิจล่วงหน้า (เจ้าหน้าที่รับฝากเงินล่วงหน้า / ผู้ดูแล) ──
+    // ── งานเงินฝากฌาปนกิจล่วงหน้า (สมาชิกดูบัญชีตัวเอง / เจ้าหน้าที่รับฝากเงินล่วงหน้า / ผู้ดูแล) ──
     AppMenuGroup(
       id: 'deposit-member',
       title: depositMemberGroup,
       icon: Icons.badge_outlined,
       items: [
+        AppMenuItem(
+          id: 'my-deposit',
+          title: MyDepositScreen.menuTitle,
+          icon: MyDepositScreen.menuIcon,
+          visible: (a) => a.myDeposit,
+          screen: () => MyDepositScreen(apiService: api()),
+        ),
         AppMenuItem(
           id: 'deposit-search',
           title: DepositSearchScreen.menuTitle,

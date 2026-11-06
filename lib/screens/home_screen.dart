@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../config/app_config.dart';
 import '../config/theme.dart';
+import '../models/deposit.dart';
 import '../models/home_document.dart';
 import '../models/stats.dart';
 import '../models/stored_file.dart';
 import '../providers/auth_provider.dart';
+import '../screens/deposit/my_deposit_screen.dart';
 import '../services/api_service.dart';
 import '../utils/file_download.dart';
 import '../utils/roles.dart';
@@ -59,6 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _downloadError;
   bool _wasLoggedIn = false;
 
+  /// ยอดเงินฝากล่วงหน้าของสมาชิกที่เข้าสู่ระบบ (null = ไม่แสดงการ์ด)
+  MyDepositSummary? _myDeposit;
+
   @override
   void initState() {
     super.initState();
@@ -83,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _load() async {
     _loadStats();
     _loadDocuments();
+    _loadMyDeposit();
     try {
       final forms = await _api.getGeneralFiles(category: FileCategory.form);
       if (!mounted) return;
@@ -104,6 +110,45 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       if (mounted) setState(() => _stats = null);
     }
+  }
+
+  /// การ์ดยอดเงินฝากล่วงหน้า: เฉพาะสมาชิกที่มีบัญชีฝาก โหลดไม่ได้ = ซ่อน (ไม่แสดงข้อผิดพลาด)
+  Future<void> _loadMyDeposit() async {
+    if (!widget.authProvider.isLoggedIn || !widget.authProvider.isMember) {
+      if (_myDeposit != null) setState(() => _myDeposit = null);
+      return;
+    }
+    try {
+      final s = await _api.depositMySummary();
+      if (mounted) setState(() => _myDeposit = s.hasAccount ? s : null);
+    } catch (_) {
+      if (mounted) setState(() => _myDeposit = null);
+    }
+  }
+
+  Widget _myDepositBar(bool isDesktop) {
+    final s = _myDeposit;
+    if (s == null) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      color: AppTheme.backgroundColor,
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 32 : 12,
+        isDesktop ? 24 : 16,
+        isDesktop ? 32 : 12,
+        0,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: MyDepositCard(
+            summary: s,
+            hint:
+                'ดูประวัติทั้งหมดที่เมนู "ข้อมูลสมาชิก › ${MyDepositScreen.menuTitle}"',
+          ),
+        ),
+      ),
+    );
   }
 
   /// เอกสารหน้าแรก โหลดไม่ได้ = ซ่อนปุ่ม (ไม่แสดงข้อผิดพลาด)
@@ -200,10 +245,8 @@ class _HomeScreenState extends State<HomeScreen> {
           _banner(context, isDesktop),
           if (_stats != null) _statsBar(isDesktop),
           _documentsBar(isDesktop),
-          // ── ที่ว่างไว้สำหรับการ์ด "ยอดเงินฝากล่วงหน้า" ของสมาชิก (ส่วนเพิ่มในอนาคต: ฝากเงินฌาปนกิจล่วงหน้า)
-          // ยังไม่มีเส้น API — ห้ามใส่ข้อมูลสมมุติ เมื่อ backend มีเส้นแล้วให้แสดงการ์ดตรงนี้เฉพาะ
-          // `widget.authProvider.isMember` (ยอดของตัวเองเท่านั้น เลขสมาชิกจากบัญชี)
-          const _AdvanceDepositSlot(),
+          // การ์ด "ยอดเงินฝากล่วงหน้า" เฉพาะสมาชิกที่มีบัญชีฝาก (ยอดของตัวเอง backend ใช้เลขสมาชิกจากบัญชี)
+          _myDepositBar(isDesktop),
           _formsSection(isDesktop),
           _contactSection(isDesktop),
           const CustomFooter(),
@@ -610,15 +653,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-/// ที่ว่างของการ์ด "ยอดเงินฝากล่วงหน้า" (ส่วนเพิ่มในอนาคต) — ตอนนี้ไม่แสดงอะไร
-///
-/// เมื่อ backend มีเส้นยอดเงินฝากของสมาชิกแล้ว ให้แสดงการ์ดในนี้เฉพาะสมาชิก (ยอดของตัวเองเท่านั้น)
-/// ห้ามใส่ตัวเลขสมมุติ
-class _AdvanceDepositSlot extends StatelessWidget {
-  const _AdvanceDepositSlot();
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
 }

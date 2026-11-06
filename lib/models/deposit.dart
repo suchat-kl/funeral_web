@@ -376,6 +376,8 @@ class MonthlyCostItem {
 
 /// แถวรายงานประจำเดือน (Monthly_Rep)
 class MonthlyReportItem {
+  /// เดือนของแถว (มีเฉพาะในหน้าบัญชีของฉัน ที่แสดงหลายเดือน)
+  final int? period;
   final String memberNo;
   final String name;
   final String? carried;
@@ -387,6 +389,7 @@ class MonthlyReportItem {
   final String? balance;
 
   const MonthlyReportItem({
+    this.period,
     required this.memberNo,
     this.name = '',
     this.carried,
@@ -400,6 +403,7 @@ class MonthlyReportItem {
 
   factory MonthlyReportItem.fromJson(Map<String, dynamic> j) =>
       MonthlyReportItem(
+        period: _i(j['period']),
         memberNo: _str(j['memberNo']),
         name: _str(j['name']),
         carried: _s(j['carried']),
@@ -709,5 +713,55 @@ class RefundResultData {
     balanceBefore: _str(j['balanceBefore']),
     balance: _str(j['balance']),
     debt: _str(j['debt']),
+  );
+}
+
+/// บัญชีฝากล่วงหน้าของฉัน (`GET /api/deposit/me`) — ของบัญชีที่เข้าสู่ระบบเท่านั้น
+class MyDepositSummary {
+  final bool hasAccount;
+  final String? memberNo;
+  final String? balance;
+  final String? debt;
+  final int openDebts;
+  final int? status;
+  final String? statusName;
+  final bool dunning;
+  final int? closedPeriod;
+  final bool special;
+  final String? specialAmount;
+
+  /// เดือนล่าสุดที่ประมวลผลหักเงินแล้ว (ยอดเป็นของ ณ หลังเดือนนี้)
+  final int? lastProcessed;
+
+  const MyDepositSummary({
+    this.hasAccount = false,
+    this.memberNo,
+    this.balance,
+    this.debt,
+    this.openDebts = 0,
+    this.status,
+    this.statusName,
+    this.dunning = false,
+    this.closedPeriod,
+    this.special = false,
+    this.specialAmount,
+    this.lastProcessed,
+  });
+
+  bool get closed => closedPeriod != null;
+
+  factory MyDepositSummary.fromJson(Map<String, dynamic> j) => MyDepositSummary(
+    hasAccount: _b(j['hasAccount']),
+    memberNo: _s(j['memberNo']),
+    balance: _s(j['balance']),
+    debt: _s(j['debt']),
+    openDebts: _i(j['openDebts']) ?? 0,
+    status: _i(j['status']),
+    statusName: _s(j['statusName']),
+    dunning: _b(j['dunning']),
+    closedPeriod: _i(j['closedPeriod']),
+    special: _b(j['special']),
+    specialAmount: _s(j['specialAmount']),
+    lastProcessed: _i(j['lastProcessed']),
   );
 }
