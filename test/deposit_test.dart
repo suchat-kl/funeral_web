@@ -86,6 +86,25 @@ class FakeDeposit {
   ) {
     const base = '/api/deposit/staff';
     final path = call.substring(call.indexOf(' ') + 1);
+    if (path.startsWith('/api/deposit/admin/')) {
+      // แก้ไขโดยผู้ดูแลระบบ: ADMIN เท่านั้น (เจ้าหน้าที่รับฝากเงินล่วงหน้าไม่ได้)
+      if (roles == null) {
+        return b.error(401, 'UNAUTHENTICATED', 'กรุณาเข้าสู่ระบบ');
+      }
+      if (!roles.contains('ADMIN')) {
+        return b.error(403, 'FORBIDDEN', 'ไม่มีสิทธิ์ใช้งานส่วนนี้');
+      }
+      if (body?['reason'] == null) {
+        return b.error(400, 'BAD_REQUEST', 'กรุณาระบุเหตุผลของการแก้ไข');
+      }
+      return b.json(200, {
+        'memberNo': '9',
+        'balance': 1344.5,
+        'debt': 0,
+        'version': 8,
+        'reportRows': 2,
+      });
+    }
     if (!path.startsWith(base)) return null;
     if (roles == null) {
       return b.error(401, 'UNAUTHENTICATED', 'กรุณาเข้าสู่ระบบ');
@@ -102,6 +121,7 @@ class FakeDeposit {
       case 'GET $base/members/9/payments':
         return b.json(200, [
           {
+            'id': 'pay-6905',
             'period': 256905,
             'bodyBegin': 18489,
             'bodyEnd': 18527,
@@ -492,6 +512,116 @@ void main() {
     expect(find.byKey(ExcelButton.buttonKey), findsOneWidget);
   });
 
+  group('ผู้ดูแลระบบแก้ไขข้อมูล', () {
+    Future<void> openPayments(
+      WidgetTester tester,
+      String user,
+      String pw,
+    ) async {
+      await open(
+        tester,
+        () => DepositMemberScreen(apiService: ApiService(), memberNo: '9'),
+        user: user,
+        pw: pw,
+      );
+      await tester.tap(find.byKey(DepositMemberScreen.tabKey(2)));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('แก้จำนวนเงินการชำระ: ต้องใส่เหตุผล ส่ง version แล้วโหลดใหม่', (
+      tester,
+    ) async {
+      await openPayments(tester, 'admin1', 'Admin@2569x');
+      expect(textContaining('กดที่แถวเพื่อแก้ไขหรือลบ'), findsOneWidget);
+      await tester.tap(find.byKey(DepositMemberScreen.rowKey('pay-6905')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('admin-field-amount')),
+        '100',
+      );
+      // ไม่ใส่เหตุผล = ไม่ส่ง
+      await tester.tap(find.byKey(const ValueKey('admin-form-save')));
+      await tester.pumpAndSettle();
+      expect(textContaining('กรุณาระบุเหตุผล'), findsOneWidget);
+      expect(
+        backend.calls.where((c) => c.contains('/api/deposit/admin/')),
+        isEmpty,
+      );
+
+      await tester.enterText(
+        find.byKey(const ValueKey('admin-form-reason')),
+        'อัตราผิด',
+      );
+      await tester.tap(find.byKey(const ValueKey('admin-form-save')));
+      await tester.pumpAndSettle();
+      final sent = backend.bodyOf('PUT /api/deposit/admin/payments/pay-6905');
+      expect(sent?['amount'], '100');
+      expect(sent?['version'], 7);
+      expect(sent?['reason'], 'อัตราผิด');
+      expect(sent?['paidPeriod'], 256905);
+      expect(textContaining('คำนวณใหม่ 2 แถว'), findsOneWidget);
+    });
+
+    testWidgets('ลบการชำระต้องกดยืนยันสองครั้ง', (tester) async {
+      await openPayments(tester, 'admin1', 'Admin@2569x');
+      await tester.tap(find.byKey(DepositMemberScreen.rowKey('pay-6905')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('admin-form-reason')),
+        'หักผิดคน',
+      );
+      await tester.tap(find.byKey(const ValueKey('admin-form-delete')));
+      await tester.pumpAndSettle();
+      expect(backend.calls.where((c) => c.contains('/delete')), isEmpty);
+      await tester.tap(find.byKey(const ValueKey('admin-form-delete')));
+      await tester.pumpAndSettle();
+      final sent = backend.bodyOf(
+        'POST /api/deposit/admin/payments/pay-6905/delete',
+      );
+      expect(sent?['version'], 7);
+      expect(sent?['reason'], 'หักผิดคน');
+    });
+
+    testWidgets('ปรับยอดเงินฝากจากแท็บบัญชีฝาก', (tester) async {
+      await open(
+        tester,
+        () => DepositMemberScreen(apiService: ApiService(), memberNo: '9'),
+        user: 'admin1',
+        pw: 'Admin@2569x',
+      );
+      await tester.tap(find.byKey(DepositMemberScreen.adminAdjustKey));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('admin-field-amount')),
+        '-156',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('admin-form-reason')),
+        'ยอดยกมาจากระบบเดิมผิด',
+      );
+      await tester.tap(find.byKey(const ValueKey('admin-form-save')));
+      await tester.pumpAndSettle();
+      final sent = backend.bodyOf('POST /api/deposit/admin/members/9/adjust');
+      expect(sent?['amount'], '-156');
+      expect(sent?['version'], 7);
+      expect(sent?['period'], isNull); // ไม่เลือก = เดือนที่เปิดอยู่
+    });
+
+    testWidgets('เจ้าหน้าที่รับฝากเงินล่วงหน้าไม่เห็นเครื่องมือแก้ไข', (
+      tester,
+    ) async {
+      await openPayments(tester, 'deposit1', 'Deposit@2569x');
+      expect(textContaining('กดที่แถวเพื่อแก้ไขหรือลบ'), findsNothing);
+      await tester.tap(find.byKey(DepositMemberScreen.rowKey('pay-6905')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('admin-form-save')), findsNothing);
+      await tester.tap(find.byKey(DepositMemberScreen.tabKey(0)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(DepositMemberScreen.adminAdjustKey), findsNothing);
+      expect(find.byKey(DepositMemberScreen.adminRegisterKey), findsNothing);
+    });
+  });
+
   Future<void> member(WidgetTester tester, int i, String no) async {
     await tester.enterText(find.byKey(DepositEntryScreen.memberKey(i)), no);
     await tester.pump(const Duration(milliseconds: 500));
@@ -596,7 +726,10 @@ void main() {
       findsOneWidget,
     );
     expect(textContaining('รายงานประจำเดือน 3,210 แถว'), findsOneWidget);
-    expect(textContaining('ปลดหนี้เดือนก่อน 40 เดือน 6,240.00 บาท'), findsOneWidget);
+    expect(
+      textContaining('ปลดหนี้เดือนก่อน 40 เดือน 6,240.00 บาท'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(MonthlyProcessScreen.undoKey));
     await tester.pumpAndSettle();
