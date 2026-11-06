@@ -99,10 +99,10 @@ void main() {
 
     test('บทบาทใหม่ที่ไม่รู้จักถูกเก็บไว้ ไม่ทำให้พัง (รายการเปิด)', () {
       expect(
-        Roles.listFrom(['ROLE_ADMIN', 'DEPOSIT_STAFF', 'MEMBER', 'MEMBER']),
-        ['ADMIN', 'DEPOSIT_STAFF', 'MEMBER'],
+        Roles.listFrom(['ROLE_ADMIN', 'FUTURE_ROLE', 'MEMBER', 'MEMBER']),
+        ['ADMIN', 'FUTURE_ROLE', 'MEMBER'],
       );
-      expect(Roles.nameOf('DEPOSIT_STAFF'), 'DEPOSIT_STAFF');
+      expect(Roles.nameOf('FUTURE_ROLE'), 'FUTURE_ROLE');
       expect(Roles.nameOf('ROLE_UPLOADER'), 'ผู้นำไฟล์เข้า');
     });
   });

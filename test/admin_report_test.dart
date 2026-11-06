@@ -60,7 +60,7 @@ void main() {
           'size': 10,
         });
         expect(find.text('member1'), findsOneWidget);
-        expect(find.text('ทั้งหมด 9 บัญชี'), findsOneWidget);
+        expect(find.text('ทั้งหมด 10 บัญชี'), findsOneWidget);
         expect(textContaining(backend.users['member1']!.idcard), findsNothing);
 
         await tester.enterText(

@@ -11,6 +11,14 @@ import '../screens/cash_receipt_screen.dart';
 import '../screens/chapana_retired_screen.dart';
 import '../screens/chapana_slip_screen.dart';
 import '../screens/control_users_screen.dart';
+import '../screens/deposit/deposit_entry_screen.dart';
+import '../screens/deposit/deposit_parts.dart';
+import '../screens/deposit/deposit_refund_screen.dart';
+import '../screens/deposit/deposit_report_screens.dart';
+import '../screens/deposit/deposit_search_screen.dart';
+import '../screens/deposit/monthly_cost_screen.dart';
+import '../screens/deposit/monthly_process_screen.dart';
+import '../screens/deposit/my_deposit_screen.dart';
 import '../screens/general_files_screen.dart';
 import '../screens/monthyear_files_screen.dart';
 import '../screens/receipt_period_screen.dart';
@@ -182,6 +190,91 @@ List<AppMenuGroup> buildAppMenu() {
           icon: ChapanaRetiredScreen.menuIcon,
           visible: (a) => a.reports,
           screen: () => ChapanaRetiredScreen(apiService: api()),
+        ),
+      ],
+    ),
+    // ── งานเงินฝากฌาปนกิจล่วงหน้า (สมาชิกดูบัญชีตัวเอง / เจ้าหน้าที่รับฝากเงินล่วงหน้า / ผู้ดูแล) ──
+    AppMenuGroup(
+      id: 'deposit-member',
+      title: depositMemberGroup,
+      icon: Icons.badge_outlined,
+      items: [
+        AppMenuItem(
+          id: 'my-deposit',
+          title: MyDepositScreen.menuTitle,
+          icon: MyDepositScreen.menuIcon,
+          visible: (a) => a.myDeposit,
+          screen: () => MyDepositScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-search',
+          title: DepositSearchScreen.menuTitle,
+          icon: DepositSearchScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => DepositSearchScreen(apiService: api()),
+        ),
+      ],
+    ),
+    AppMenuGroup(
+      id: 'deposit',
+      title: depositGroup,
+      icon: Icons.savings,
+      items: [
+        AppMenuItem(
+          id: 'deposit-entry',
+          title: DepositEntryScreen.menuTitle,
+          icon: DepositEntryScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => DepositEntryScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-monthly-cost',
+          title: MonthlyCostScreen.menuTitle,
+          icon: MonthlyCostScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => MonthlyCostScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-process',
+          title: MonthlyProcessScreen.menuTitle,
+          icon: MonthlyProcessScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => MonthlyProcessScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-refund',
+          title: DepositRefundScreen.menuTitle,
+          icon: DepositRefundScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => DepositRefundScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-report-monthly',
+          title: 'รายงาน › ${MonthlyReportScreen.menuTitle}',
+          icon: MonthlyReportScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => MonthlyReportScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-report-need',
+          title: 'รายงาน › ${NeedDepositScreen.menuTitle}',
+          icon: NeedDepositScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => NeedDepositScreen(apiService: api()),
+        ),
+        AppMenuItem(
+          id: 'deposit-report-dunning',
+          title: 'รายงาน › ${NeedDepositScreen.dunningTitle}',
+          icon: NeedDepositScreen.dunningIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => NeedDepositScreen(apiService: api(), dunning: true),
+        ),
+        AppMenuItem(
+          id: 'deposit-report-totals',
+          title: 'รายงาน › ${DepositTotalsScreen.menuTitle}',
+          icon: DepositTotalsScreen.menuIcon,
+          visible: (a) => a.depositStaff,
+          screen: () => DepositTotalsScreen(apiService: api()),
         ),
       ],
     ),
