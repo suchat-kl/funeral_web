@@ -170,6 +170,8 @@ class FakeDeposit {
           'paid': 2600,
           'paidTotal': 395200,
           'owed': 600,
+          'clearedDebts': 40,
+          'clearedTotal': 6240,
           'reportRows': 3210,
         });
       case 'POST $base/process/256906/undo':
@@ -594,6 +596,7 @@ void main() {
       findsOneWidget,
     );
     expect(textContaining('รายงานประจำเดือน 3,210 แถว'), findsOneWidget);
+    expect(textContaining('ปลดหนี้เดือนก่อน 40 เดือน 6,240.00 บาท'), findsOneWidget);
 
     await tester.tap(find.byKey(MonthlyProcessScreen.undoKey));
     await tester.pumpAndSettle();
