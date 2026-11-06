@@ -220,7 +220,20 @@ class DepositDetail {
   final DepositAccountInfo? account;
   final SpecialMemberInfo? special;
 
-  const DepositDetail(this.member, this.memo, this.account, this.special);
+  /// ชื่อตามทะเบียนของระบบเดิม (ผู้ดูแลระบบแก้ได้) — member แสดงชื่อจาก Oracle ก่อน
+  final String? legacyTitle;
+  final String? legacyFirstName;
+  final String? legacyLastName;
+
+  const DepositDetail(
+    this.member,
+    this.memo,
+    this.account,
+    this.special, {
+    this.legacyTitle,
+    this.legacyFirstName,
+    this.legacyLastName,
+  });
 
   factory DepositDetail.fromJson(Map<String, dynamic> j) => DepositDetail(
     DepositMemberRow.fromJson(_map(j['member']) ?? const {}),
@@ -231,11 +244,15 @@ class DepositDetail {
     _map(j['special']) == null
         ? null
         : SpecialMemberInfo.fromJson(_map(j['special'])!),
+    legacyTitle: _s(j['legacyTitle']),
+    legacyFirstName: _s(j['legacyFirstName']),
+    legacyLastName: _s(j['legacyLastName']),
   );
 }
 
 /// ประวัติชำระ / ค้างชำระ (Payment_History / Debt_History)
 class DepositMonthItem {
+  final String? id;
   final int? period;
   final int? bodyBegin;
   final int? bodyEnd;
@@ -247,7 +264,11 @@ class DepositMonthItem {
   /// คืนกรณีเก็บซ้ำซ้อนแล้ว (เดือนในรายงานที่คืน) null = ยังไม่คืน
   final int? reversedPeriod;
 
+  /// ค้างชำระ: เดือนในรายงานที่ปลดหนี้
+  final int? clearedPeriod;
+
   const DepositMonthItem({
+    this.id,
     this.period,
     this.bodyBegin,
     this.bodyEnd,
@@ -256,11 +277,13 @@ class DepositMonthItem {
     this.paidPeriod,
     this.cleared = false,
     this.reversedPeriod,
+    this.clearedPeriod,
   });
 
   String get bodies => bodyBegin == null ? '-' : '$bodyBegin-${bodyEnd ?? ''}';
 
   factory DepositMonthItem.fromJson(Map<String, dynamic> j) => DepositMonthItem(
+    id: _s(j['id']),
     period: _i(j['period']),
     bodyBegin: _i(j['bodyBegin']),
     bodyEnd: _i(j['bodyEnd']),
@@ -269,11 +292,13 @@ class DepositMonthItem {
     paidPeriod: _i(j['paidPeriod']),
     cleared: _b(j['cleared']),
     reversedPeriod: _i(j['reversedPeriod']),
+    clearedPeriod: _i(j['clearedPeriod']),
   );
 }
 
 /// รับเงินฝากแต่ละครั้ง
 class DepositReceiptItem {
+  final String? id;
   final String? date;
   final String? legacyDate;
   final String amount;
@@ -281,7 +306,18 @@ class DepositReceiptItem {
   final String? memberNo;
   final String? name;
 
+  /// เดือนในรายงานประจำเดือนที่นับรายการนี้
+  final int? reportPeriod;
+
+  /// DEPOSIT / REFUND / ADJUST (ปรับยอดโดยผู้ดูแลระบบ)
+  final String? kind;
+  final String? note;
+
   const DepositReceiptItem({
+    this.id,
+    this.reportPeriod,
+    this.kind,
+    this.note,
     this.date,
     this.legacyDate,
     this.amount = '0',
@@ -292,6 +328,10 @@ class DepositReceiptItem {
 
   factory DepositReceiptItem.fromJson(Map<String, dynamic> j) =>
       DepositReceiptItem(
+        id: _s(j['id']),
+        reportPeriod: _i(j['reportPeriod']),
+        kind: _s(j['kind']),
+        note: _s(j['note']),
         date: _s(j['date']),
         legacyDate: _s(j['legacyDate']),
         amount: _str(j['amount']),
@@ -303,6 +343,8 @@ class DepositReceiptItem {
 
 /// ทะเบียนรายตัว (สมุดบัญชี)
 class LedgerItem {
+  final String? id;
+  final int? seq;
   final String? date;
   final String? legacyDate;
   final String text;
@@ -313,6 +355,8 @@ class LedgerItem {
   final String? balance;
 
   const LedgerItem({
+    this.id,
+    this.seq,
     this.date,
     this.legacyDate,
     this.text = '',
@@ -324,6 +368,8 @@ class LedgerItem {
   });
 
   factory LedgerItem.fromJson(Map<String, dynamic> j) => LedgerItem(
+    id: _s(j['id']),
+    seq: _i(j['seq']),
     date: _s(j['date']),
     legacyDate: _s(j['legacyDate']),
     text: _str(j['text']),
@@ -763,5 +809,27 @@ class MyDepositSummary {
     special: _b(j['special']),
     specialAmount: _s(j['specialAmount']),
     lastProcessed: _i(j['lastProcessed']),
+  );
+}
+
+/// ผลการแก้ไขโดยผู้ดูแลระบบ: ยอดหลังแก้ และจำนวนแถวรายงานประจำเดือนที่คำนวณใหม่
+class AdminEditResult {
+  final String? balance;
+  final String? debt;
+  final int? version;
+  final int reportRows;
+
+  const AdminEditResult({
+    this.balance,
+    this.debt,
+    this.version,
+    this.reportRows = 0,
+  });
+
+  factory AdminEditResult.fromJson(Map<String, dynamic> j) => AdminEditResult(
+    balance: _s(j['balance']),
+    debt: _s(j['debt']),
+    version: _i(j['version']),
+    reportRows: _i(j['reportRows']) ?? 0,
   );
 }

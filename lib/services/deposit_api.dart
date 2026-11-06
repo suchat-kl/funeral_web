@@ -430,4 +430,59 @@ extension DepositApi on ApiService {
         MonthlyReportItem.fromJson(j),
     ];
   }
+
+  // ---- ผู้ดูแลระบบแก้ไขข้อมูล /api/deposit/admin/** (ADMIN เท่านั้น ต้องมีเหตุผลทุกครั้ง) ----
+
+  static const String _admin = '/api/deposit/admin';
+
+  Future<AdminEditResult> _adminCall(
+    String method,
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final r = await _authedRequest(method, '$_admin$path', data: body);
+    if (r.statusCode == 200 && r.data is Map) {
+      return AdminEditResult.fromJson(Map<String, dynamic>.from(r.data));
+    }
+    throw ApiService._apiError(r.statusCode, r.data, 'บันทึกการแก้ไขไม่สำเร็จ');
+  }
+
+  Future<AdminEditResult> depositAdminRegister(
+    String memberNo,
+    Map<String, dynamic> body,
+  ) => _adminCall('PUT', '/members/$memberNo/register', body);
+
+  Future<AdminEditResult> depositAdminAccount(
+    String memberNo,
+    Map<String, dynamic> body,
+  ) => _adminCall('PUT', '/members/$memberNo/account', body);
+
+  Future<AdminEditResult> depositAdminAdjust(
+    String memberNo,
+    Map<String, dynamic> body,
+  ) => _adminCall('POST', '/members/$memberNo/adjust', body);
+
+  Future<AdminEditResult> depositAdminDeleteSpecial(
+    String memberNo,
+    String reason,
+  ) => _adminCall('POST', '/members/$memberNo/special/delete', {
+    'reason': reason,
+  });
+
+  /// [kind] = receipts / payments / debts / ledger
+  Future<AdminEditResult> depositAdminEdit(
+    String kind,
+    String id,
+    Map<String, dynamic> body,
+  ) => _adminCall('PUT', '/$kind/$id', body);
+
+  Future<AdminEditResult> depositAdminDelete(
+    String kind,
+    String id, {
+    int? version,
+    required String reason,
+  }) => _adminCall('POST', '/$kind/$id/delete', {
+    'version': version,
+    'reason': reason,
+  });
 }

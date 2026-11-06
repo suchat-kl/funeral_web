@@ -5,17 +5,20 @@ import '../../config/theme.dart';
 import '../../models/deposit.dart';
 import '../../services/api_service.dart';
 import '../../utils/dialog.dart';
+import '../../utils/roles.dart';
 import '../../utils/snackbar_helper.dart';
 import '../../utils/util.dart';
 import '../../widgets/screen_parts.dart';
 import '../../widgets/work_parts.dart';
+import 'deposit_admin_form.dart';
 import 'deposit_parts.dart';
 
 /// ข้อมูลสมาชิก › รายละเอียดสมาชิก (หน้า 2 ของแบบ 13.1) หน้าเดียวหลายแท็บ
 ///
 /// หัว: ชื่อ-สกุล (ทะเบียนสมาชิก) เลขสมาชิก สังกัด สภาพสมาชิก บันทึกช่วยจำ
 /// แท็บ: บัญชีฝาก · สมาชิกพิเศษ · ประวัติชำระ · ประวัติค้างชำระ · ประวัติฝาก · ทะเบียนรายตัว
-/// หน้านี้ไม่แก้ยอดเงิน — ยอดเปลี่ยนได้เฉพาะจากเมนูบันทึกเงินฝาก / ประมวลผล / จ่ายคืน
+/// เจ้าหน้าที่: หน้านี้ไม่แก้ยอดเงิน — ยอดเปลี่ยนได้เฉพาะจากเมนูบันทึกเงินฝาก / ประมวลผล / จ่ายคืน
+/// ผู้ดูแลระบบ (ADMIN): แก้ได้ทุกส่วน กดแถวในแท็บประวัติเพื่อแก้/ลบ ปรับยอดเงินฝาก แก้ทะเบียน (ต้องใส่เหตุผล)
 class DepositMemberScreen extends StatefulWidget {
   final ApiService apiService;
   final String memberNo;
@@ -36,6 +39,13 @@ class DepositMemberScreen extends StatefulWidget {
   static const Key specialRefKey = ValueKey('deposit-special-ref');
   static const Key saveSpecialKey = ValueKey('deposit-save-special');
   static const Key clearDebtKey = ValueKey('deposit-clear-debt');
+  static const Key adminRegisterKey = ValueKey('deposit-admin-register');
+  static const Key adminAdjustKey = ValueKey('deposit-admin-adjust');
+  static const Key adminAccountKey = ValueKey('deposit-admin-account');
+  static const Key adminDeleteSpecialKey = ValueKey(
+    'deposit-admin-delete-special',
+  );
+  static Key rowKey(String? id) => ValueKey('deposit-history-row-$id');
   static Key tabKey(int i) => ValueKey('deposit-detail-tab-$i');
 
   static const List<String> tabs = [
@@ -75,6 +85,9 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
 
   ApiService get _api => widget.apiService;
   String get _no => widget.memberNo;
+
+  /// ผู้ดูแลระบบแก้ไขได้ทุกส่วน (backend ตรวจซ้ำที่ /api/deposit/admin/**)
+  bool get _admin => MenuAccess(loggedIn: true, roles: _api.roles).isAdmin;
 
   @override
   void initState() {
@@ -231,6 +244,392 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
   Future<void> _openAccount() =>
       _guard(() => _api.depositOpenAccount(_no), 'เปิดบัญชีฝากล่วงหน้าแล้ว');
 
+  // ---------------- ผู้ดูแลระบบแก้ไข ----------------
+
+  /// ทำงานแก้ไข แล้วโหลดข้อมูลและแท็บที่เปิดอยู่ใหม่ (ล้างประวัติที่โหลดไว้ทั้งหมด)
+  Future<void> _adminDo(Future<AdminEditResult> Function() work) async {
+    setState(() => _saving = true);
+    try {
+      final r = await work();
+      _payments = null;
+      _debts = null;
+      _receipts = null;
+      _ledger = null;
+      if (mounted) {
+        context.showSuccessSnackBar(
+          r.reportRows > 0
+              ? 'บันทึกแล้ว · รายงานประจำเดือนคำนวณใหม่ ${countText(r.reportRows)} แถว'
+              : 'บันทึกแล้ว',
+        );
+      }
+      await _load();
+      if (mounted && _tab >= 2) await _loadTab(_tab);
+    } catch (e) {
+      if (mounted) context.showErrorSnackBar(e.toString());
+    }
+    if (mounted) setState(() => _saving = false);
+  }
+
+  int? get _version => _detail?.account?.version;
+
+  static Map<int, String> get _statusOptions => {
+    for (var i = 0; i < DepositStatus.names.length; i++)
+      i: DepositStatus.names[i],
+  };
+
+  Future<void> _adminRegister() async {
+    final d = _detail!;
+    final r = await showAdminForm(
+      context,
+      title: 'แก้ไขทะเบียนสมาชิก ${d.member.memberNo}',
+      note: 'ชื่อในทะเบียนของระบบเดิม — หน้าจอแสดงชื่อจาก Oracle ก่อนถ้ามี',
+      fields: [
+        AdminField(
+          'legacyTitle',
+          'คำนำหน้า',
+          AdminFieldType.text,
+          initial: d.legacyTitle,
+          maxLength: 50,
+        ),
+        AdminField(
+          'legacyFirstName',
+          'ชื่อ',
+          AdminFieldType.text,
+          initial: d.legacyFirstName,
+        ),
+        AdminField(
+          'legacyLastName',
+          'สกุล',
+          AdminFieldType.text,
+          initial: d.legacyLastName,
+        ),
+        AdminField(
+          'divCode',
+          'รหัสสังกัด',
+          AdminFieldType.text,
+          initial: d.member.divCode,
+          maxLength: 7,
+        ),
+        AdminField(
+          'status',
+          'สภาพสมาชิก',
+          AdminFieldType.choice,
+          initial: d.member.status ?? 0,
+          options: _statusOptions,
+        ),
+        AdminField(
+          'memo',
+          'บันทึกช่วยจำ',
+          AdminFieldType.text,
+          initial: d.memo,
+          maxLength: 500,
+        ),
+      ],
+    );
+    if (r == null || !mounted) return;
+    await _adminDo(
+      () => _api.depositAdminRegister(_no, {...r.values, 'reason': r.reason}),
+    );
+  }
+
+  Future<void> _adminAccount() async {
+    final a = _detail!.account!;
+    final r = await showAdminForm(
+      context,
+      title: 'แก้ไขบัญชีฝาก (ผู้ดูแลระบบ)',
+      note:
+          'ล้างเดือนที่ปิดบัญชี = เปิดบัญชีกลับมาใช้ (กลับเข้ารอบหักรายเดือนถ้าสภาพปกติ) '
+          'เปลี่ยนเดือนที่ปิดแล้ว รายงานประจำเดือนของสมาชิกนี้จะคำนวณใหม่',
+      fields: [
+        AdminField(
+          'remark',
+          'หมายเหตุ',
+          AdminFieldType.text,
+          initial: a.remark,
+          maxLength: 128,
+        ),
+        AdminField(
+          'status',
+          'สภาพบัญชี',
+          AdminFieldType.choice,
+          initial: a.status,
+          options: _statusOptions,
+        ),
+        AdminField(
+          'statusText',
+          'ข้อความในรายงาน (ช่องพ้นสภาพ)',
+          AdminFieldType.text,
+          initial: a.statusText,
+          maxLength: 50,
+        ),
+        AdminField(
+          'dunning',
+          'ระหว่างทวงถามหนี้',
+          AdminFieldType.check,
+          initial: a.dunning,
+        ),
+        AdminField(
+          'closedPeriod',
+          'เดือนที่ปิดบัญชี (ว่าง = ยังไม่ปิด)',
+          AdminFieldType.period,
+          initial: a.closedPeriod,
+        ),
+      ],
+    );
+    if (r == null || !mounted) return;
+    await _adminDo(
+      () => _api.depositAdminAccount(_no, {
+        ...r.values,
+        'version': a.version,
+        'reason': r.reason,
+      }),
+    );
+  }
+
+  Future<void> _adminAdjust() async {
+    final r = await showAdminForm(
+      context,
+      title: 'ปรับยอดเงินฝาก (ผู้ดูแลระบบ)',
+      note:
+          'ใส่จำนวนบวกเพื่อเพิ่มยอด หรือติดลบเพื่อลดยอด ระบบบันทึกเป็นรายการ "ปรับยอดโดยผู้ดูแลระบบ" '
+          'นับในช่อง "รับ" ของรายงานเดือนที่เลือก (ไม่ระบุ = เดือนที่เปิดอยู่)',
+      saveText: 'ปรับยอด',
+      fields: const [
+        AdminField(
+          'amount',
+          'จำนวนเงินที่ปรับ (บาท)',
+          AdminFieldType.signedMoney,
+          hint: 'เช่น 156 หรือ -156',
+        ),
+        AdminField('period', 'เดือนในรายงาน', AdminFieldType.period),
+        AdminField('docNo', 'เลขที่เอกสาร', AdminFieldType.text, maxLength: 20),
+      ],
+    );
+    if (r == null || !mounted) return;
+    if (r.values['amount'] == null) {
+      context.showErrorSnackBar('กรุณาระบุจำนวนเงินที่ปรับ');
+      return;
+    }
+    await _adminDo(
+      () => _api.depositAdminAdjust(_no, {
+        ...r.values,
+        'version': _version,
+        'reason': r.reason,
+      }),
+    );
+  }
+
+  Future<void> _adminDeleteSpecial() async {
+    final r = await showAdminForm(
+      context,
+      title: 'ยกเลิกการเป็นสมาชิกพิเศษ',
+      fields: const [],
+      saveText: 'ยกเลิกสมาชิกพิเศษ',
+    );
+    if (r == null || !mounted) return;
+    await _adminDo(() => _api.depositAdminDeleteSpecial(_no, r.reason));
+  }
+
+  Future<void> _adminHistory(
+    String kind,
+    String? id,
+    String title,
+    List<AdminField> fields,
+    String? note,
+  ) async {
+    if (id == null) return;
+    final r = await showAdminForm(
+      context,
+      title: title,
+      note: note,
+      fields: fields,
+      deleteText: 'ลบรายการนี้',
+    );
+    if (r == null || !mounted) return;
+    await _adminDo(
+      () => r.delete
+          ? _api.depositAdminDelete(
+              kind,
+              id,
+              version: _version,
+              reason: r.reason,
+            )
+          : _api.depositAdminEdit(kind, id, {
+              ...r.values,
+              'version': _version,
+              'reason': r.reason,
+            }),
+    );
+  }
+
+  Future<void> _editPayment(DepositMonthItem m) => _adminHistory(
+    'payments',
+    m.id,
+    'แก้ไขการชำระเดือน ${DepositPeriod.label(m.period)}',
+    [
+      AdminField(
+        'amount',
+        'จำนวนเงิน (บาท)',
+        AdminFieldType.signedMoney,
+        initial: m.amount,
+      ),
+      AdminField(
+        'bodyBegin',
+        'ศพที่ (เริ่ม)',
+        AdminFieldType.integer,
+        initial: m.bodyBegin,
+      ),
+      AdminField(
+        'bodyEnd',
+        'ศพที่ (สิ้นสุด)',
+        AdminFieldType.integer,
+        initial: m.bodyEnd,
+      ),
+      AdminField(
+        'paidPeriod',
+        'เดือนที่จ่าย (เดือนในรายงาน)',
+        AdminFieldType.period,
+        initial: m.paidPeriod,
+      ),
+      AdminField('remark', 'หมายเหตุ', AdminFieldType.text, initial: m.remark),
+    ],
+    'แก้จำนวนเงินหรือลบ = ยอดคงเหลือเปลี่ยนตามผลต่าง และรายงานประจำเดือนของสมาชิกนี้คำนวณใหม่',
+  );
+
+  Future<void> _editDebt(DepositMonthItem m) => _adminHistory(
+    'debts',
+    m.id,
+    'แก้ไขค้างชำระเดือน ${DepositPeriod.label(m.period)}',
+    [
+      AdminField(
+        'amount',
+        'จำนวนเงิน (บาท)',
+        AdminFieldType.money,
+        initial: m.amount,
+      ),
+      AdminField(
+        'bodyBegin',
+        'ศพที่ (เริ่ม)',
+        AdminFieldType.integer,
+        initial: m.bodyBegin,
+      ),
+      AdminField(
+        'bodyEnd',
+        'ศพที่ (สิ้นสุด)',
+        AdminFieldType.integer,
+        initial: m.bodyEnd,
+      ),
+      AdminField(
+        'cleared',
+        'ปลดหนี้แล้ว',
+        AdminFieldType.check,
+        initial: m.cleared,
+      ),
+      AdminField(
+        'clearedPeriod',
+        'เดือนที่ปลดหนี้',
+        AdminFieldType.period,
+        initial: m.clearedPeriod,
+      ),
+      AdminField('remark', 'หมายเหตุ', AdminFieldType.text, initial: m.remark),
+    ],
+    'หนี้รวมของบัญชีคำนวณใหม่จากเดือนที่ยังค้าง (ไม่เปลี่ยนยอดเงินฝาก)',
+  );
+
+  Future<void> _editReceipt(DepositReceiptItem r) => _adminHistory(
+    'receipts',
+    r.id,
+    'แก้ไขรายการฝาก',
+    [
+      AdminField('date', 'วันที่', AdminFieldType.date, initial: r.date),
+      AdminField(
+        'docNo',
+        'เลขที่เอกสาร',
+        AdminFieldType.text,
+        initial: r.docNo,
+        maxLength: 20,
+      ),
+      AdminField(
+        'amount',
+        'จำนวนเงิน (บาท)',
+        AdminFieldType.signedMoney,
+        initial: r.amount,
+      ),
+      AdminField(
+        'reportPeriod',
+        'เดือนในรายงาน',
+        AdminFieldType.period,
+        initial: r.reportPeriod,
+      ),
+      AdminField(
+        'note',
+        'หมายเหตุ',
+        AdminFieldType.text,
+        initial: r.note,
+        maxLength: 200,
+      ),
+    ],
+    'แก้จำนวนเงินหรือลบ = ยอดคงเหลือเปลี่ยนตามผลต่าง และรายงานประจำเดือนของสมาชิกนี้คำนวณใหม่',
+  );
+
+  Future<void> _editLedger(LedgerItem l) => _adminHistory(
+    'ledger',
+    l.id,
+    'แก้ไขทะเบียนรายตัว',
+    [
+      AdminField('date', 'วันที่', AdminFieldType.date, initial: l.date),
+      AdminField('seq', 'ลำดับในวัน', AdminFieldType.integer, initial: l.seq),
+      AdminField(
+        'text',
+        'รายการ',
+        AdminFieldType.text,
+        initial: l.text,
+        maxLength: 50,
+      ),
+      AdminField(
+        'docNo',
+        'เลขที่เอกสาร',
+        AdminFieldType.text,
+        initial: l.docNo,
+        maxLength: 20,
+      ),
+      AdminField(
+        'received',
+        'รับ',
+        AdminFieldType.signedMoney,
+        initial: l.received,
+      ),
+      AdminField(
+        'bodyPay',
+        'จ่ายศพที่',
+        AdminFieldType.text,
+        initial: l.bodyPay,
+        maxLength: 50,
+      ),
+      AdminField('paid', 'จ่าย', AdminFieldType.signedMoney, initial: l.paid),
+      AdminField(
+        'balance',
+        'คงเหลือ',
+        AdminFieldType.signedMoney,
+        initial: l.balance,
+      ),
+    ],
+    'ทะเบียนรายตัวเป็นสมุดบัญชีสำหรับแสดงผล แก้แล้วไม่เปลี่ยนยอดเงินฝาก '
+        '(ยอดจริงมาจากประวัติฝาก/ชำระ หรือปุ่มปรับยอดเงินฝาก)',
+  );
+
+  Widget _adminHint(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      text,
+      style: screenText(
+        size: 13,
+        color: AppTheme.warningColor,
+        weight: FontWeight.w600,
+      ),
+    ),
+  );
+
   // ---------------- ส่วนแสดงผล ----------------
 
   Widget _header(DepositDetail d) {
@@ -266,6 +665,16 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
                   const StatusChip(
                     'ไม่มีในทะเบียนของระบบเดิม',
                     AppTheme.neutralColor,
+                  ),
+                if (_admin && m.registered)
+                  OutlinedButton.icon(
+                    key: DepositMemberScreen.adminRegisterKey,
+                    onPressed: _saving ? null : _adminRegister,
+                    icon: const Icon(Icons.edit_note),
+                    label: Text(
+                      'แก้ไขทะเบียน (ผู้ดูแลระบบ)',
+                      style: screenText(size: 13.5),
+                    ),
                   ),
               ],
             ),
@@ -361,9 +770,35 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'ยอดเงินเปลี่ยนได้จากเมนูบันทึกเงินฝาก ประมวลผลหักเงิน และจ่ายคืนเท่านั้น',
+          _admin
+              ? 'ผู้ดูแลระบบ: ปรับยอดเงินฝาก หรือแก้รายการในแท็บประวัติได้ (ต้องใส่เหตุผล)'
+              : 'ยอดเงินเปลี่ยนได้จากเมนูบันทึกเงินฝาก ประมวลผลหักเงิน และจ่ายคืนเท่านั้น',
           style: screenText(size: 12.5, color: AppTheme.textSecondary),
         ),
+        if (_admin) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                key: DepositMemberScreen.adminAdjustKey,
+                onPressed: _saving ? null : _adminAdjust,
+                icon: const Icon(Icons.tune),
+                label: Text('ปรับยอดเงินฝาก', style: screenText(size: 14)),
+              ),
+              OutlinedButton.icon(
+                key: DepositMemberScreen.adminAccountKey,
+                onPressed: _saving ? null : _adminAccount,
+                icon: const Icon(Icons.admin_panel_settings_outlined),
+                label: Text(
+                  'แก้ไขบัญชี (ผู้ดูแลระบบ)',
+                  style: screenText(size: 14),
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 14),
         TextField(
           key: DepositMemberScreen.remarkKey,
@@ -506,15 +941,32 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
           ),
         ),
       ),
+      if (_admin && d.special != null) ...[
+        const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: DepositMemberScreen.adminDeleteSpecialKey,
+            onPressed: _saving ? null : _adminDeleteSpecial,
+            icon: const Icon(Icons.delete_outline, color: AppTheme.dangerColor),
+            label: Text(
+              'ยกเลิกการเป็นสมาชิกพิเศษ (ผู้ดูแลระบบ)',
+              style: screenText(size: 14, color: AppTheme.dangerColor),
+            ),
+          ),
+        ),
+      ],
     ],
   );
 
   Widget _monthTab(List<DepositMonthItem>? items, {required bool debt}) {
     if (items == null) return const LoadState(loading: true);
-    return PagedSheet<DepositMonthItem>(
+    final sheet = PagedSheet<DepositMonthItem>(
       minWidth: 820,
       unit: 'เดือน',
       items: items,
+      onTap: _admin ? (m) => debt ? _editDebt(m) : _editPayment(m) : null,
+      rowKey: (m) => DepositMemberScreen.rowKey(m.id),
       columns: [
         const SheetColumn('ลำดับ', flex: 1),
         const SheetColumn('เดือน', flex: 3),
@@ -541,7 +993,18 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
         cellText(m.remark, size: 13),
       ],
     );
+    return _withAdminHint(sheet);
   }
+
+  Widget _withAdminHint(Widget sheet) => !_admin
+      ? sheet
+      : Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _adminHint('ผู้ดูแลระบบ: กดที่แถวเพื่อแก้ไขหรือลบ'),
+            sheet,
+          ],
+        );
 
   static String _dateOf(String? iso, String? legacy) =>
       iso == null ? (legacy ?? '-') : Util.thaiDateOf(iso);
@@ -549,51 +1012,59 @@ class _DepositMemberScreenState extends State<DepositMemberScreen> {
   Widget _receiptTab() {
     final items = _receipts;
     if (items == null) return const LoadState(loading: true);
-    return PagedSheet<DepositReceiptItem>(
-      minWidth: 700,
-      items: items,
-      columns: const [
-        SheetColumn('ลำดับ', flex: 1),
-        SheetColumn('วันที่', flex: 3),
-        SheetColumn('เลขที่เอกสาร', flex: 3),
-        SheetColumn('จำนวนเงิน', flex: 2, right: true),
-      ],
-      cells: (r, no) => [
-        cellText('$no'),
-        cellText(_dateOf(r.date, r.legacyDate)),
-        cellText(r.docNo),
-        cellMoney(r.amount),
-      ],
+    return _withAdminHint(
+      PagedSheet<DepositReceiptItem>(
+        minWidth: 700,
+        items: items,
+        onTap: _admin ? _editReceipt : null,
+        rowKey: (r) => DepositMemberScreen.rowKey(r.id),
+        columns: const [
+          SheetColumn('ลำดับ', flex: 1),
+          SheetColumn('วันที่', flex: 3),
+          SheetColumn('เลขที่เอกสาร', flex: 3),
+          SheetColumn('จำนวนเงิน', flex: 2, right: true),
+        ],
+        cells: (r, no) => [
+          cellText('$no'),
+          cellText(_dateOf(r.date, r.legacyDate)),
+          cellText(r.kind == 'ADJUST' ? '${r.docNo ?? ''} (ปรับยอด)' : r.docNo),
+          cellMoney(r.amount),
+        ],
+      ),
     );
   }
 
   Widget _ledgerTab() {
     final items = _ledger;
     if (items == null) return const LoadState(loading: true);
-    return PagedSheet<LedgerItem>(
-      minWidth: 1000,
-      items: items,
-      initialPageSize: 20,
-      columns: const [
-        SheetColumn('ลำดับ', flex: 1),
-        SheetColumn('วันที่', flex: 3),
-        SheetColumn('รายการ', flex: 5),
-        SheetColumn('เลขที่เอกสาร', flex: 2),
-        SheetColumn('รับ', flex: 2, right: true),
-        SheetColumn('จ่ายศพที่', flex: 3),
-        SheetColumn('จ่าย', flex: 2, right: true),
-        SheetColumn('คงเหลือ', flex: 2, right: true),
-      ],
-      cells: (l, no) => [
-        cellText('$no'),
-        cellText(_dateOf(l.date, l.legacyDate), size: 13),
-        cellText(l.text, size: 13),
-        cellText(l.docNo, size: 13),
-        cellMoney(l.received),
-        cellText(l.bodyPay, size: 13),
-        cellMoney(l.paid),
-        cellMoney(l.balance),
-      ],
+    return _withAdminHint(
+      PagedSheet<LedgerItem>(
+        minWidth: 1000,
+        items: items,
+        initialPageSize: 20,
+        onTap: _admin ? _editLedger : null,
+        rowKey: (l) => DepositMemberScreen.rowKey(l.id),
+        columns: const [
+          SheetColumn('ลำดับ', flex: 1),
+          SheetColumn('วันที่', flex: 3),
+          SheetColumn('รายการ', flex: 5),
+          SheetColumn('เลขที่เอกสาร', flex: 2),
+          SheetColumn('รับ', flex: 2, right: true),
+          SheetColumn('จ่ายศพที่', flex: 3),
+          SheetColumn('จ่าย', flex: 2, right: true),
+          SheetColumn('คงเหลือ', flex: 2, right: true),
+        ],
+        cells: (l, no) => [
+          cellText('$no'),
+          cellText(_dateOf(l.date, l.legacyDate), size: 13),
+          cellText(l.text, size: 13),
+          cellText(l.docNo, size: 13),
+          cellMoney(l.received),
+          cellText(l.bodyPay, size: 13),
+          cellMoney(l.paid),
+          cellMoney(l.balance),
+        ],
+      ),
     );
   }
 
