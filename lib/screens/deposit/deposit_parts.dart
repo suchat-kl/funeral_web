@@ -232,6 +232,56 @@ class _ExcelButtonState extends State<ExcelButton> {
   );
 }
 
+/// ปุ่มส่งออก PDF ของรายงาน (ตารางเดียวกับ Excel) — กดแล้วเปิด/บันทึกไฟล์แบบเดียวกับปุ่ม Excel
+class PdfButton extends StatefulWidget {
+  final Future<DownloadedFile> Function() load;
+  final String label;
+
+  const PdfButton({super.key, required this.load, this.label = 'ส่งออก PDF'});
+
+  static const Key buttonKey = ValueKey('deposit-pdf');
+
+  @override
+  State<PdfButton> createState() => _PdfButtonState();
+}
+
+class _PdfButtonState extends State<PdfButton> {
+  bool _busy = false;
+  SavedFile? _saved;
+
+  @override
+  void dispose() {
+    _saved?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run() async {
+    setState(() => _busy = true);
+    try {
+      final f = await widget.load();
+      _saved?.dispose();
+      final saved = FileSaver.instance.save(f);
+      if (mounted) setState(() => _saved = saved);
+    } catch (e) {
+      if (mounted) context.showErrorSnackBar(e.toString());
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) => KeyedSubtree(
+    key: PdfButton.buttonKey,
+    child: DownloadButtons(
+      label: widget.label,
+      icon: Icons.picture_as_pdf,
+      color: AppTheme.dangerColor,
+      busy: _busy,
+      saved: _saved,
+      onDownload: _run,
+    ),
+  );
+}
+
 /// ชิปยอดรวม "ป้าย: ค่า"
 class TotalChip extends StatelessWidget {
   final String label;

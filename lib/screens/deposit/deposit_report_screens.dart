@@ -11,7 +11,8 @@ import 'deposit_parts.dart';
 
 /// รายงาน › บัญชีรายละเอียดประจำเดือน (หน้า 8 ของแบบ 13.1 = rep1 เดิม)
 ///
-/// เลือกเดือนจากรายการเดือนที่มีรายงาน → ตาราง + บรรทัดรวม 4 ยอด + ส่งออก Excel (แทน query แปลงเป็นexcel)
+/// เลือกเดือนจากรายการเดือนที่มีรายงาน → ตาราง + บรรทัดรวม 4 ยอด + ส่งออก Excel (แทน query แปลงเป็นexcel) และ PDF
+/// ค้นหาในเดือนที่เลือกด้วยเลขสมาชิกหรือชื่อ-สกุล (กรองในหน้าจอ ไฟล์ที่ส่งออกเป็นทั้งเดือนเสมอ)
 class MonthlyReportScreen extends StatefulWidget {
   final ApiService apiService;
 
@@ -20,6 +21,16 @@ class MonthlyReportScreen extends StatefulWidget {
   static const String menuTitle = 'บัญชีรายละเอียดประจำเดือน';
   static const IconData menuIcon = Icons.summarize;
   static const Key periodKey = ValueKey('monthly-report-period');
+  static const Key searchKey = ValueKey('monthly-report-search');
+
+  /// ตรงกับคำค้น: ตัวเลข = เลขสมาชิกมีเลขนี้, ข้อความ = ชื่อ-สกุลมีคำนี้ (ไม่สนช่องว่าง)
+  static bool matches(MonthlyReportItem r, String query) {
+    final q = query.trim();
+    if (q.isEmpty) return true;
+    if (RegExp(r'^\d+$').hasMatch(q)) return r.memberNo.contains(q);
+    String squash(String s) => s.replaceAll(RegExp(r'\s+'), '');
+    return squash(r.name).contains(squash(q)) || r.memberNo.contains(q);
+  }
 
   @override
   State<MonthlyReportScreen> createState() => _MonthlyReportScreenState();
@@ -31,11 +42,27 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
   MonthlyReportData? _data;
   String? _error;
   bool _loading = true;
+  final _search = TextEditingController();
+
+  String get _query => _search.text.trim();
+
+  List<MonthlyReportItem> _filtered(MonthlyReportData d) => _query.isEmpty
+      ? d.rows
+      : [
+          for (final r in d.rows)
+            if (MonthlyReportScreen.matches(r, _query)) r,
+        ];
 
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
   }
 
   Future<void> _init() async {
@@ -114,11 +141,15 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
                   },
                 ),
               ),
-            if (_period != null && d != null)
+            if (_period != null && d != null) ...[
               ExcelButton(
                 load: () =>
                     widget.apiService.depositMonthlyReportExcel(_period!),
               ),
+              PdfButton(
+                load: () => widget.apiService.depositMonthlyReportPdf(_period!),
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 12),
@@ -135,7 +166,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
             runSpacing: 8,
             children: [
               TotalChip('จำนวน', '${countText(d.count)} คน'),
-              TotalChip('ยอดยกมา', moneyText(d.carried)),
+              TotalChip('ยกมา', moneyText(d.carried)),
               TotalChip(
                 'รับ',
                 moneyText(d.received),
@@ -146,16 +177,44 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: 360,
+                child: TextField(
+                  key: MonthlyReportScreen.searchKey,
+                  controller: _search,
+                  style: screenText(size: 14),
+                  decoration: depositInput(
+                    'ค้นหาเลขสมาชิก หรือชื่อ-สกุล',
+                    prefix: const Icon(Icons.search),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              if (_query.isNotEmpty)
+                Text(
+                  'พบ ${countText(_filtered(d).length)} จาก ${countText(d.count)} คน',
+                  style: screenText(size: 13.5, color: AppTheme.textSecondary),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
           PagedSheet<MonthlyReportItem>(
+            key: ValueKey('monthly-${d.period}-$_query'),
             minWidth: 1300,
             unit: 'คน',
-            items: d.rows,
+            items: _filtered(d),
+            emptyText: 'ไม่พบสมาชิกที่ค้นหา',
             initialPageSize: 20,
             columns: const [
               SheetColumn('ลำดับ', flex: 1),
               SheetColumn('เลขที่สมาชิก', flex: 2),
               SheetColumn('ชื่อ - สกุล', flex: 5),
-              SheetColumn('ยอดคงเหลือ (ยกมา)', flex: 3, right: true),
+              SheetColumn('ยกมา', flex: 3, right: true),
               SheetColumn('จำนวนเงินรับ', flex: 3, right: true),
               SheetColumn('จ่ายศพที่', flex: 3),
               SheetColumn('พ้นสภาพสมาชิก', flex: 2),
@@ -175,18 +234,24 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
               cellMoney(r.paid),
               cellMoney(r.balance),
             ],
-            totals: [
-              const SizedBox.shrink(),
-              const SizedBox.shrink(),
-              cellText('รวม ${countText(d.count)} คน', weight: FontWeight.w700),
-              cellMoney(d.carried, bold: true),
-              cellMoney(d.received, bold: true),
-              const SizedBox.shrink(),
-              const SizedBox.shrink(),
-              const SizedBox.shrink(),
-              cellMoney(d.paid, bold: true),
-              cellMoney(d.balance, bold: true),
-            ],
+            // ยอดรวมทั้งเดือนจาก backend — ระหว่างค้นหาไม่แสดง (หน้าเว็บไม่คำนวณเงินเอง)
+            totals: _query.isNotEmpty
+                ? null
+                : [
+                    const SizedBox.shrink(),
+                    const SizedBox.shrink(),
+                    cellText(
+                      'รวม ${countText(d.count)} คน',
+                      weight: FontWeight.w700,
+                    ),
+                    cellMoney(d.carried, bold: true),
+                    cellMoney(d.received, bold: true),
+                    const SizedBox.shrink(),
+                    const SizedBox.shrink(),
+                    const SizedBox.shrink(),
+                    cellMoney(d.paid, bold: true),
+                    cellMoney(d.balance, bold: true),
+                  ],
           ),
         ],
       ],
@@ -303,6 +368,14 @@ class _NeedDepositScreenState extends State<NeedDepositScreen> {
                 load: () => widget.dunning
                     ? widget.apiService.depositDunningReportExcel()
                     : widget.apiService.depositNeedReportExcel(
+                        threshold: _threshold.text,
+                      ),
+              ),
+            if (d != null)
+              PdfButton(
+                load: () => widget.dunning
+                    ? widget.apiService.depositDunningReportPdf()
+                    : widget.apiService.depositNeedReportPdf(
                         threshold: _threshold.text,
                       ),
               ),
@@ -448,6 +521,9 @@ class _DepositTotalsScreenState extends State<DepositTotalsScreen> {
               ),
               ExcelButton(
                 load: () => widget.apiService.depositTotalsExcel(d.period),
+              ),
+              PdfButton(
+                load: () => widget.apiService.depositTotalsPdf(d.period),
               ),
             ],
           ),

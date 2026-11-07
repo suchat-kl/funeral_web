@@ -201,6 +201,13 @@ extension DepositApi on ApiService {
     failMessage: 'ส่งออก Excel ไม่สำเร็จ',
   );
 
+  Future<DownloadedFile> depositMonthlyReportPdf(int period) => _download(
+    'GET',
+    '$_base/reports/monthly/$period/pdf',
+    fallbackName: 'monthly-$period.pdf',
+    failMessage: 'ส่งออก PDF ไม่สำเร็จ',
+  );
+
   Future<NeedDepositData> depositNeedReport({String? threshold}) async {
     final t = (threshold ?? '').trim();
     final r = await _authedRequest(
@@ -222,6 +229,17 @@ extension DepositApi on ApiService {
     );
   }
 
+  Future<DownloadedFile> depositNeedReportPdf({String? threshold}) {
+    final t = (threshold ?? '').trim();
+    return _download(
+      'GET',
+      '$_base/reports/need-deposit/pdf',
+      query: {if (t.isNotEmpty) 'threshold': t},
+      fallbackName: 'need-deposit.pdf',
+      failMessage: 'ส่งออก PDF ไม่สำเร็จ',
+    );
+  }
+
   Future<NeedDepositData> depositDunningReport() async {
     final r = await _authedRequest('GET', '$_base/reports/dunning');
     return NeedDepositData.fromJson(_mapOf(r, 'โหลดรายงานไม่สำเร็จ'));
@@ -232,6 +250,13 @@ extension DepositApi on ApiService {
     '$_base/reports/dunning/xlsx',
     fallbackName: 'dunning.xlsx',
     failMessage: 'ส่งออก Excel ไม่สำเร็จ',
+  );
+
+  Future<DownloadedFile> depositDunningReportPdf() => _download(
+    'GET',
+    '$_base/reports/dunning/pdf',
+    fallbackName: 'dunning.pdf',
+    failMessage: 'ส่งออก PDF ไม่สำเร็จ',
   );
 
   Future<DepositTotalsData> depositTotals(int period) async {
@@ -247,6 +272,13 @@ extension DepositApi on ApiService {
     '$_base/reports/deposit-totals/$period/xlsx',
     fallbackName: 'deposit-$period.xlsx',
     failMessage: 'ส่งออก Excel ไม่สำเร็จ',
+  );
+
+  Future<DownloadedFile> depositTotalsPdf(int period) => _download(
+    'GET',
+    '$_base/reports/deposit-totals/$period/pdf',
+    fallbackName: 'deposit-$period.pdf',
+    failMessage: 'ส่งออก PDF ไม่สำเร็จ',
   );
 
   // ---------------- งานเงิน ----------------

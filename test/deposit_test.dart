@@ -313,15 +313,31 @@ class FakeDeposit {
               'paid': 156,
               'balance': 1500.5,
             },
+            {
+              'memberNo': '1272',
+              'name': 'นางสมศรี   ค้างจ่าย',
+              'carried': 736,
+              'received': 0,
+              'bodyPay': '18489-18527',
+              'status': '.',
+              'paid': 156,
+              'balance': 580,
+            },
           ],
           'totals': {
-            'count': 1,
+            'count': 2,
             'carried': 1656.5,
             'received': 0,
             'paid': 156,
             'balance': 1500.5,
           },
         });
+      case 'GET $base/reports/monthly/256905/pdf':
+        return b.bytes(
+          Uint8List.fromList(utf8.encode('%PDF')),
+          'application/pdf',
+          'monthly-256905.pdf',
+        );
       case 'GET $base/reports/monthly/256905/xlsx':
         return b.bytes(
           Uint8List.fromList(utf8.encode('xlsx')),
@@ -510,15 +526,46 @@ void main() {
     );
   });
 
-  testWidgets('รายงานประจำเดือน: ยอดรวม และส่งออก Excel', (tester) async {
+  testWidgets('รายงานประจำเดือน: ยอดรวม ส่งออก Excel/PDF และค้นหา', (
+    tester,
+  ) async {
     final saver = installFakeSaver();
     await open(tester, () => MonthlyReportScreen(apiService: ApiService()));
     expect(find.text('พฤษภาคม 2569 (6905)'), findsOneWidget);
-    expect(find.text('รวม 1 คน'), findsOneWidget);
+    expect(find.text('รวม 2 คน'), findsOneWidget);
     expect(find.text('1,656.50'), findsWidgets);
+    expect(find.text('ยกมา'), findsWidgets);
+    expect(find.text('ยอดคงเหลือ (ยกมา)'), findsNothing);
     await tester.tap(find.text('ส่งออก Excel'));
     await tester.pumpAndSettle();
-    expect(saver.saved.single.fileName, 'monthly-256905.xlsx');
+    expect(saver.saved.last.fileName, 'monthly-256905.xlsx');
+    await tester.tap(find.text('ส่งออก PDF'));
+    await tester.pumpAndSettle();
+    expect(saver.saved.last.fileName, 'monthly-256905.pdf');
+
+    // ค้นด้วยชื่อ (ช่องว่างไม่มีผล) และเลขสมาชิก
+    await tester.enterText(
+      find.byKey(MonthlyReportScreen.searchKey),
+      'สมศรีค้าง',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('1272'), findsOneWidget);
+    expect(find.text('9'), findsNothing);
+    expect(textContaining('พบ 1 จาก 2 คน'), findsOneWidget);
+    expect(find.text('รวม 2 คน'), findsNothing);
+    await tester.enterText(find.byKey(MonthlyReportScreen.searchKey), '9');
+    await tester.pumpAndSettle();
+    expect(find.text('นายสมชาย ทดลอง'), findsOneWidget);
+    expect(find.text('1272'), findsNothing);
+    await tester.enterText(
+      find.byKey(MonthlyReportScreen.searchKey),
+      'ไม่มีชื่อนี้',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('ไม่พบสมาชิกที่ค้นหา'), findsOneWidget);
+    await tester.enterText(find.byKey(MonthlyReportScreen.searchKey), '');
+    await tester.pumpAndSettle();
+    expect(find.text('รวม 2 คน'), findsOneWidget);
   });
 
   testWidgets('รายงานระหว่างทวงถามหนี้', (tester) async {

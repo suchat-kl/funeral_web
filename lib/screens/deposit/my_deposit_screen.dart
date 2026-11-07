@@ -187,7 +187,7 @@ class _MyDepositScreenState extends State<MyDepositScreen> {
       items: items,
       columns: const [
         SheetColumn('เดือน', flex: 3),
-        SheetColumn('ยอดยกมา', flex: 2, right: true),
+        SheetColumn('ยกมา', flex: 2, right: true),
         SheetColumn('รับ', flex: 2, right: true),
         SheetColumn('จ่ายศพที่', flex: 3),
         SheetColumn('สถานะ', flex: 2),
